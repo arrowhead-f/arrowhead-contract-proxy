@@ -1,0 +1,62 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>se.arkalix.core.coprox</groupId>
+        <artifactId>contract-proxy-parent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>contract-proxy</artifactId>
+    <version>${revision}</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>se.arkalix</groupId>
+            <artifactId>kalix-base</artifactId>
+            <version>${kalix.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>se.arkalix</groupId>
+            <artifactId>kalix-core-plugins</artifactId>
+            <version>${kalix.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>se.arkalix</groupId>
+            <artifactId>kalix-processors</artifactId>
+            <version>${kalix.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.version}</version>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <mainClass>se.arkalix.core.coprox.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
