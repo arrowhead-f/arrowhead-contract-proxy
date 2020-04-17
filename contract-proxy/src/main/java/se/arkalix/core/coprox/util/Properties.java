@@ -69,6 +69,10 @@ public class Properties {
             : 0));
     }
 
+    public InetSocketAddress getInetSocketAddressOrThrow(final String key) {
+        return getInetSocketAddress(key).orElseThrow(() -> missingProperty(key));
+    }
+
     public Optional<Integer> getInteger(final String key) {
         return getString(key).map(Integer::parseInt);
     }

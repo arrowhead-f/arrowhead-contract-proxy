@@ -2,21 +2,30 @@ package se.arkalix.core.coprox;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.arkalix.ArServiceCache;
+import se.arkalix.ArSystem;
+import se.arkalix.core.coprox.util.Properties;
+import se.arkalix.core.plugin.HttpJsonCloudPlugin;
+import se.arkalix.security.identity.OwnedIdentity;
+import se.arkalix.security.identity.TrustStore;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(final String[] args) {
-        final String arg0;
+        final String args0;
         switch (args.length) {
         case 0:
-            arg0 = "./application.properties";
+            args0 = "./application.properties";
             break;
         case 1:
-            arg0 = args[0];
+            args0 = args[0];
             break;
         default:
             logger.error("Expected either 0 or 1 arguments, but the " +
@@ -27,21 +36,95 @@ public class Main {
             return;
         }
         try {
-            final var pathToConfiguration = Path.of(arg0).toAbsolutePath().normalize();
+            final var pathToProperties = Path.of(args0).toAbsolutePath().normalize();
 
             if (logger.isInfoEnabled()) {
-                logger.info("Reading contract proxy configuration at {}", arg0);
+                logger.info("Reading contract proxy properties from {}", args0);
             }
-            final var configuration = ContractProxyConfiguration.read(pathToConfiguration);
+            final var properties = Properties.read(pathToProperties);
 
             if (logger.isInfoEnabled()) {
-                logger.info("Creating contract proxy instance");
+                logger.info("Setting up contract proxy system");
             }
-            final var contractProxy = new ContractProxy(configuration);
-            contractProxy.start();
+            final var system = createContractProxySystem(properties);
+
+            if (logger.isInfoEnabled()) {
+                logger.info("Loading contract proxy data model");
+            }
+            final var model = new Model();
+
+            system.provide(ContractNegotiationService.createFor(system, model));
+            system.provide(ContractNegotiationTrustedService.createFor(system, model));
+            system.provide(ContractNegotiationTrustedSessionService.createFor(system, model));
+
+            if (logger.isInfoEnabled()) {
+                logger.info("Contract proxy system served via: {}", system.localAddress());
+            }
         }
         catch (final Throwable throwable) {
             logger.error("Failed to start contract proxy", throwable);
         }
+    }
+
+    private static ArSystem createContractProxySystem(final Properties properties)
+        throws GeneralSecurityException, IOException
+    {
+        final var builder = new ArSystem.Builder();
+
+        final var isSecure = properties.getBoolean("kalix.is-secure")
+            .orElseGet(() -> properties.isDefined("kalix.identity.keystore-path"));
+
+        if (isSecure) {
+            final var keyStorePath = properties.getPathOrThrow("kalix.identity.keystore-path");
+            final var keyStorePassword = properties.getString("kalix.identity.keystore-password");
+            final var keyAlias = properties.getString("kalix.identity.key-alias");
+            final var keyPassword = properties.getString("kalix.identity.key-password");
+
+            final var identity = new OwnedIdentity.Loader()
+                .keyStorePath(keyStorePath)
+                .keyStorePassword(keyStorePassword.map(String::toCharArray).orElse(null))
+                .keyAlias(keyAlias.orElse(null))
+                .keyPassword(keyPassword.map(String::toCharArray).orElse(null))
+                .load();
+
+            final var trustStorePath = properties.getPathOrThrow("kalix.truststore.path");
+            final var trustStorePassword = properties.getString("kalix.truststore.password");
+
+            final var trustStore = TrustStore.read(
+                trustStorePath,
+                trustStorePassword.map(String::toCharArray).orElse(null));
+
+            builder
+                .identity(identity)
+                .trustStore(trustStore);
+        }
+        else {
+            builder.name(properties.getStringOrThrow("kalix.name"));
+        }
+
+        var serviceRegistrySocketAddress = properties
+            .getInetSocketAddressOrThrow("kalix.integrator.service-registry.host");
+        if (serviceRegistrySocketAddress.getPort() == 0) {
+            serviceRegistrySocketAddress = InetSocketAddress.createUnresolved(
+                serviceRegistrySocketAddress.getHostString(),
+                properties.getInteger("kalix.integrator.service-registry.port").orElse(0));
+        }
+
+        return builder
+            .localSocketAddress(properties.getInetSocketAddress("kalix.host")
+                .map(host -> {
+                    if (host.getPort() == 0) {
+                        return InetSocketAddress.createUnresolved(
+                            host.getHostString(),
+                            properties.getInteger("kalix.port").orElse(0));
+                    }
+                    return host;
+                })
+                .orElse(null))
+            .serviceCache(properties.getDuration("kalix.service-cache.entry-lifetime")
+                .map(ArServiceCache::withEntryLifetimeLimit)
+                .orElseGet(ArServiceCache::withDefaultEntryLifetimeLimit))
+            .plugins(HttpJsonCloudPlugin.viaServiceRegistryAt(serviceRegistrySocketAddress))
+            .build();
     }
 }
