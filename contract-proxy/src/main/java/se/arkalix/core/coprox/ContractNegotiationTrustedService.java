@@ -2,6 +2,7 @@ package se.arkalix.core.coprox;
 
 import se.arkalix.ArService;
 import se.arkalix.ArSystem;
+import se.arkalix.core.coprox.model.Model;
 import se.arkalix.descriptor.EncodingDescriptor;
 import se.arkalix.net.http.service.HttpService;
 
@@ -18,11 +19,15 @@ public class ContractNegotiationTrustedService {
             .encodings(EncodingDescriptor.JSON)
             .accessPolicy(token())
 
-            .post("session-data", (request, response) -> {
+            .post("/acceptances", (request, response) -> {
                 return done();
             })
 
-            .delete("session-data", (request, response) -> {
+            .post("/offers", (request, response) -> {
+                return done();
+            })
+
+            .delete("/offers/#id", (request, response) -> {
                 return done();
             });
     }

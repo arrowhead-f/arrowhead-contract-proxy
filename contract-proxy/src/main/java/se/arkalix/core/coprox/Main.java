@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.arkalix.ArServiceCache;
 import se.arkalix.ArSystem;
+import se.arkalix.core.coprox.model.Model;
 import se.arkalix.core.coprox.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
 import se.arkalix.security.identity.OwnedIdentity;
@@ -38,28 +39,20 @@ public class Main {
         try {
             final var pathToProperties = Path.of(args0).toAbsolutePath().normalize();
 
-            if (logger.isInfoEnabled()) {
-                logger.info("Reading contract proxy properties from {}", args0);
-            }
+            logger.info("Reading contract proxy properties from {}", args0);
             final var properties = Properties.read(pathToProperties);
 
-            if (logger.isInfoEnabled()) {
-                logger.info("Setting up contract proxy system");
-            }
+            logger.info("Setting up contract proxy system");
             final var system = createContractProxySystem(properties);
 
-            if (logger.isInfoEnabled()) {
-                logger.info("Loading contract proxy data model");
-            }
+            logger.info("Loading contract proxy data model");
             final var model = new Model();
 
             system.provide(ContractNegotiationService.createFor(system, model));
             system.provide(ContractNegotiationTrustedService.createFor(system, model));
             system.provide(ContractNegotiationTrustedSessionService.createFor(system, model));
 
-            if (logger.isInfoEnabled()) {
-                logger.info("Contract proxy system served via: {}", system.localAddress());
-            }
+            logger.info("Contract proxy system served via: {}", system.localAddress());
         }
         catch (final Throwable throwable) {
             logger.error("Failed to start contract proxy", throwable);
