@@ -36,7 +36,8 @@ public class ContractNegotiationService {
                         final var acceptance0 = acceptance.toAcceptance();
                         if (!acceptance0.signature().verify(counterPartyIdentity, acceptance.toCanonicalJson())) {
                             response.status(BAD_REQUEST)
-                                .body(Error.badSignatureSum(acceptance.signature().sumAsBase64()));
+                                .body(Error.badSignatureSum(counterPartyIdentity.commonName(),
+                                    acceptance.signature().sumAsBase64()));
                             return;
                         }
 
@@ -44,7 +45,8 @@ public class ContractNegotiationService {
                         final var offer0 = acceptance0.offer();
                         if (!offer0.signature().verify(system.identity(), offer.toCanonicalJson())) {
                             response.status(BAD_REQUEST)
-                                .body(Error.badSignatureSum(offer.signature().sumAsBase64()));
+                                .body(Error.badSignatureSum(system.identity().commonName(),
+                                    offer.signature().sumAsBase64()));
                             return;
                         }
 
@@ -68,7 +70,8 @@ public class ContractNegotiationService {
                         final var offer0 = offer.toOffer();
                         if (!offer0.signature().verify(counterPartyIdentity, offer.toCanonicalJson())) {
                             response.status(BAD_REQUEST)
-                                .body(Error.badSignatureSum(offer.signature().sumAsBase64()));
+                                .body(Error.badSignatureSum(counterPartyIdentity.commonName(),
+                                    offer.signature().sumAsBase64()));
                             return;
                         }
 

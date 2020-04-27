@@ -13,13 +13,6 @@ public interface Error {
             .build();
     }
 
-    static ErrorBadHashPointerDto badHashPointer(final Hash_Dto pointer) {
-        return new ErrorBadHashPointerBuilder()
-            .name("BadHashPointer")
-            .hashPointer(pointer)
-            .build();
-    }
-
     static ErrorBadRequestDto badRequest(final String cause) {
         return new ErrorBadRequestBuilder()
             .name("BadRequest")
@@ -41,9 +34,10 @@ public interface Error {
             .build();
     }
 
-    static ErrorBadSignatureSumDto badSignatureSum(final String sum) {
+    static ErrorBadSignatureSumDto badSignatureSum(final String signer, final String sum) {
         return new ErrorBadSignatureSumBuilder()
             .name("BadSignatureSum")
+            .signer(signer)
             .signatureSum(sum)
             .build();
     }

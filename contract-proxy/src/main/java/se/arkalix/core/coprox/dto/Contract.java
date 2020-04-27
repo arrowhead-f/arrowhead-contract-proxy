@@ -13,7 +13,7 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 @DtoWritableAs(JSON)
 public interface Contract {
     @JsonName("TemplateHash")
-    Hash_ templateHash();
+    Hash templateHash();
 
     @JsonName("Arguments")
     Map<String, String> arguments();

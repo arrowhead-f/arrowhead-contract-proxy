@@ -11,7 +11,7 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 
 @DtoReadableAs(JSON)
 @DtoWritableAs(JSON)
-public interface Hash_ {
+public interface Hash {
     @JsonName("HashFunction")
     HashFunction hashFunction();
 

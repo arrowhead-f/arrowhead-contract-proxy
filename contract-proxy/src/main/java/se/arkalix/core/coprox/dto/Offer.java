@@ -18,10 +18,10 @@ public interface Offer {
     long sessionId();
 
     @JsonName("OfferorFingerprint")
-    Hash_ offerorFingerprint();
+    Hash offerorFingerprint();
 
     @JsonName("ReceiverFingerprint")
-    Hash_ receiverFingerprint();
+    Hash receiverFingerprint();
 
     @JsonName("ValidAfter")
     Instant validAfter();
