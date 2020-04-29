@@ -1,7 +1,5 @@
 package se.arkalix.core.coprox.security;
 
-import se.arkalix.security.identity.TrustedIdentity;
-
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.Instant;
@@ -36,9 +34,5 @@ public class Signature {
 
     public boolean verify(final Certificate certificate, final byte[] data) {
         return verify(certificate.getPublicKey(), data);
-    }
-
-    public boolean verify(final TrustedIdentity identity, final byte[] data) {
-        return verify(identity.publicKey(), data);
     }
 }

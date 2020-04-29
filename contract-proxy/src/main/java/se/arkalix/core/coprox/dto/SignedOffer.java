@@ -1,5 +1,6 @@
 package se.arkalix.core.coprox.dto;
 
+import se.arkalix.core.coprox.model.Offer;
 import se.arkalix.dto.DtoReadableAs;
 import se.arkalix.dto.DtoWritableAs;
 import se.arkalix.dto.json.JsonName;
@@ -13,7 +14,7 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 
 @DtoReadableAs(JSON)
 @DtoWritableAs(JSON)
-public interface Offer {
+public interface SignedOffer {
     @JsonName("SessionId")
     long sessionId();
 
@@ -41,8 +42,8 @@ public interface Offer {
         return builder.toString().getBytes(StandardCharsets.UTF_8);
     }
 
-    default se.arkalix.core.coprox.model.Offer toOffer() {
-        return new se.arkalix.core.coprox.model.Offer.Builder()
+    default Offer toOffer() {
+        return new Offer.Builder()
             .offerorFingerprint(offerorFingerprint().toHash())
             .receiverFingerprint(receiverFingerprint().toHash())
             .validAfter(validAfter())

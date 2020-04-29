@@ -22,6 +22,11 @@ public class Acceptance implements Candidate {
     }
 
     @Override
+    public String type() {
+        return "acceptance";
+    }
+
+    @Override
     public Instant createdAt() {
         return signature.timestamp();
     }

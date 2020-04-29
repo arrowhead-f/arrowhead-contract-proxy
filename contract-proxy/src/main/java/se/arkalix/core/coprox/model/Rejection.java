@@ -1,20 +1,41 @@
 package se.arkalix.core.coprox.model;
 
+import se.arkalix.core.coprox.security.Hash;
+import se.arkalix.core.coprox.security.Signature;
+
 import java.time.Instant;
+import java.util.Objects;
 
 public class Rejection implements Candidate {
-    private final Instant createdAt;
+    private final Hash rejectorFingerprint;
+    private final Hash receiverFingerprint;
+    private final Signature signature;
 
-    public Rejection() {
-        createdAt = Instant.now();
+    public Rejection(final Hash rejectorFingerprint, final Hash receiverFingerprint, final Signature signature) {
+        this.rejectorFingerprint = Objects.requireNonNull(rejectorFingerprint, "Expected rejectorFingerprint");
+        this.receiverFingerprint = Objects.requireNonNull(receiverFingerprint, "Expected receiverFingerprint");
+        this.signature = Objects.requireNonNull(signature, "Expected signature");
     }
 
-    public Rejection(final Instant createdAt) {
-        this.createdAt = createdAt;
+    public Hash rejectorFingerprint() {
+        return rejectorFingerprint;
+    }
+
+    public Hash receiverFingerprint() {
+        return receiverFingerprint;
+    }
+
+    public Signature signature() {
+        return signature;
+    }
+
+    @Override
+    public String type() {
+        return "rejection";
     }
 
     @Override
     public Instant createdAt() {
-        return createdAt;
+        return signature.timestamp();
     }
 }

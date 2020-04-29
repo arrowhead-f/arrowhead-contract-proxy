@@ -61,6 +61,11 @@ public class Offer implements Candidate {
     }
 
     @Override
+    public String type() {
+        return "offer";
+    }
+
+    @Override
     public Instant createdAt() {
         return signature.timestamp();
     }

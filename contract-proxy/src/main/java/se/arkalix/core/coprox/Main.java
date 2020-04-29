@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import se.arkalix.ArServiceCache;
 import se.arkalix.ArSystem;
 import se.arkalix.core.coprox.model.Model;
+import se.arkalix.core.coprox.security.HashFunction;
 import se.arkalix.core.coprox.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
 import se.arkalix.security.identity.OwnedIdentity;
@@ -15,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Set;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -46,9 +48,11 @@ public class Main {
             final var system = createContractProxySystem(properties);
 
             logger.info("Loading contract proxy data model");
-            final var model = new Model();
+            final var model = new Model.Builder()
+                .trustedFingerprintFunctions(Set.of(HashFunction.SHA1, HashFunction.SHA256))
+                .build();
 
-            system.provide(ContractNegotiationService.createFor(system, model));
+            system.provide(ContractNegotiationService.createFor(model));
             system.provide(ContractNegotiationTrustedService.createFor(system, model));
             system.provide(ContractNegotiationTrustedSessionService.createFor(system, model));
 

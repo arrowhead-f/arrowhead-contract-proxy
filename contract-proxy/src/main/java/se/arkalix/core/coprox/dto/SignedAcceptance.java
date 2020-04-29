@@ -1,5 +1,6 @@
 package se.arkalix.core.coprox.dto;
 
+import se.arkalix.core.coprox.model.Acceptance;
 import se.arkalix.dto.DtoReadableAs;
 import se.arkalix.dto.DtoWritableAs;
 import se.arkalix.dto.json.JsonName;
@@ -10,15 +11,15 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 
 @DtoReadableAs(JSON)
 @DtoWritableAs(JSON)
-public interface Acceptance {
+public interface SignedAcceptance {
     @JsonName("Offer")
-    Offer offer();
+    SignedOffer offer();
 
     @JsonName("Signature")
     Signature signature();
 
-    default se.arkalix.core.coprox.model.Acceptance toAcceptance() {
-        return new se.arkalix.core.coprox.model.Acceptance(offer().toOffer(), signature().toSignature());
+    default Acceptance toAcceptance() {
+        return new Acceptance(offer().toOffer(), signature().toSignature());
     }
 
     default byte[] toCanonicalJson() {
