@@ -36,6 +36,18 @@ public interface SignedOffer {
     @JsonName("Signature")
     Signature signature();
 
+    default SignedOfferBuilder rebuild() {
+        final var self = (SignedOfferDto) this;
+        return new SignedOfferBuilder()
+            .sessionId(self.sessionId())
+            .offerorFingerprint((HashDto) self.offerorFingerprint())
+            .receiverFingerprint((HashDto) self.receiverFingerprint())
+            .validAfter(self.validAfter())
+            .validUntil(self.validUntil())
+            .contracts(self.contractsDto())
+            .signature((SignatureDto) self.signature());
+    }
+
     default byte[] toCanonicalJson() {
         final var builder = new StringBuilder();
         writeCanonicalJson(builder, false);

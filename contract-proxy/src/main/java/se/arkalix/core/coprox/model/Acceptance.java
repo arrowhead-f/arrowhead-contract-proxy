@@ -30,4 +30,14 @@ public class Acceptance implements Candidate {
     public Instant createdAt() {
         return signature.timestamp();
     }
+
+    @Override
+    public boolean isAcceptableAt(final Instant instant) {
+        return false;
+    }
+
+    @Override
+    public boolean isClosedAt(final Instant instant) {
+        return false;
+    }
 }

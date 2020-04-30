@@ -15,8 +15,12 @@ public class Session {
         this.candidate = Objects.requireNonNull(candidate, "Expected candidate");
     }
 
-    public boolean isClosed() {
-        return !(candidate instanceof Offer && ((Offer) candidate).validUntil().isAfter(Instant.now()));
+    public boolean isAcceptableAt(final Instant instant) {
+        return candidate.isAcceptableAt(instant);
+    }
+
+    public boolean isClosedAt(final Instant instant) {
+        return candidate.isClosedAt(instant);
     }
 
     public long id() {

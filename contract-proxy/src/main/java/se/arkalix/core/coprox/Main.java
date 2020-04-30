@@ -49,11 +49,11 @@ public class Main {
 
             logger.info("Loading contract proxy data model");
             final var model = new Model.Builder()
-                .trustedFingerprintFunctions(Set.of(HashFunction.SHA1, HashFunction.SHA256))
+                .trustedHashFunctions(Set.of(HashFunction.SHA1, HashFunction.SHA256))
                 .build();
 
             system.provide(ContractNegotiationService.createFor(model));
-            system.provide(ContractNegotiationTrustedService.createFor(system, model));
+            system.provide(ContractNegotiationTrustedService.createFor(model));
             system.provide(ContractNegotiationTrustedSessionService.createFor(system, model));
 
             logger.info("Contract proxy system served via: {}", system.localAddress());

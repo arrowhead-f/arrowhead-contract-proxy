@@ -1,13 +1,16 @@
 package se.arkalix.core.coprox;
 
 import se.arkalix.ArService;
-import se.arkalix.ArSystem;
-import se.arkalix.core.coprox.dto.*;
+import se.arkalix.core.coprox.dto.Error;
+import se.arkalix.core.coprox.dto.TrustedAcceptanceDto;
+import se.arkalix.core.coprox.dto.TrustedOfferDto;
+import se.arkalix.core.coprox.dto.TrustedRejectionDto;
+import se.arkalix.core.coprox.model.BadRequestException;
 import se.arkalix.core.coprox.model.Model;
 import se.arkalix.descriptor.EncodingDescriptor;
-import se.arkalix.net.http.HttpStatus;
 import se.arkalix.net.http.service.HttpService;
 
+import static se.arkalix.net.http.HttpStatus.BAD_REQUEST;
 import static se.arkalix.net.http.HttpStatus.NO_CONTENT;
 import static se.arkalix.security.access.AccessPolicy.token;
 import static se.arkalix.util.concurrent.Future.done;
@@ -15,7 +18,7 @@ import static se.arkalix.util.concurrent.Future.done;
 public class ContractNegotiationTrustedService {
     private ContractNegotiationTrustedService() {}
 
-    public static ArService createFor(final ArSystem system, final Model model) {
+    public static ArService createFor(final Model model) {
         return new HttpService()
             .name("contract-negotiation-trusted")
             .basePath("/negotiation-trusted")
@@ -44,6 +47,13 @@ public class ContractNegotiationTrustedService {
                     .ifSuccess(rejection -> {
                         model.update(rejection);
                         response.status(NO_CONTENT);
-                    }));
+                    }))
+
+            .catcher(BadRequestException.class, (throwable, request, response) -> {
+                response
+                    .status(BAD_REQUEST)
+                    .body(Error.from(throwable));
+                return done();
+            });
     }
 }

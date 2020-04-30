@@ -1,15 +1,15 @@
 package se.arkalix.core.coprox.model;
 
 import se.arkalix.core.coprox.security.Hash;
-import se.arkalix.core.coprox.security.HashFunction;
 import se.arkalix.core.coprox.security.Signature;
-import se.arkalix.security.identity.TrustedIdentity;
 
-import java.security.cert.CertificateEncodingException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import static se.arkalix.core.coprox.model.Model.CLOCK_SKEW_TOLERANCE;
 
 public class Offer implements Candidate {
     private final Hash offerorFingerprint;
@@ -55,11 +55,6 @@ public class Offer implements Candidate {
         return signature;
     }
 
-    public boolean isAcceptable() {
-        final var now = Instant.now();
-        return validAfter.isBefore(now) && validUntil.isAfter(now);
-    }
-
     @Override
     public String type() {
         return "offer";
@@ -68,6 +63,17 @@ public class Offer implements Candidate {
     @Override
     public Instant createdAt() {
         return signature.timestamp();
+    }
+
+    @Override
+    public boolean isAcceptableAt(final Instant instant) {
+        return validAfter().isBefore(instant.plus(CLOCK_SKEW_TOLERANCE)) &&
+            validUntil().isAfter(instant.minus(CLOCK_SKEW_TOLERANCE));
+    }
+
+    @Override
+    public boolean isClosedAt(final Instant instant) {
+        return validUntil().isAfter(instant.minus(CLOCK_SKEW_TOLERANCE));
     }
 
     public static class Builder {
@@ -83,27 +89,9 @@ public class Offer implements Candidate {
             return this;
         }
 
-        public Builder offerorFingerprint(final TrustedIdentity identity) {
-            try {
-                return offerorFingerprint(HashFunction.SHA256.hash(identity.certificate().getEncoded()));
-            }
-            catch (final CertificateEncodingException exception) {
-                throw new RuntimeException(exception);
-            }
-        }
-
         public Builder receiverFingerprint(final Hash receiverFingerprint) {
             this.receiverFingerprint = receiverFingerprint;
             return this;
-        }
-
-        public Builder receiverFingerprint(final TrustedIdentity identity) {
-            try {
-                return receiverFingerprint(HashFunction.SHA256.hash(identity.certificate().getEncoded()));
-            }
-            catch (final CertificateEncodingException exception) {
-                throw new RuntimeException(exception);
-            }
         }
 
         public Builder validAfter(final Instant validAfter) {

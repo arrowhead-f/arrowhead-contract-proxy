@@ -22,6 +22,13 @@ public interface Hash {
         return Base64.getDecoder().decode(sumAsBase64());
     }
 
+    static HashDto fromHash(se.arkalix.core.coprox.security.Hash hash) {
+        return new HashBuilder()
+            .hashFunction(hash.function())
+            .sumAsBase64(Base64.getEncoder().encodeToString(hash.sum()))
+            .build();
+    }
+
     default se.arkalix.core.coprox.security.Hash toHash() {
         return new se.arkalix.core.coprox.security.Hash(hashFunction(), sum());
     }
