@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import se.arkalix.ArServiceCache;
 import se.arkalix.ArSystem;
 import se.arkalix.core.coprox.model.Model;
-import se.arkalix.core.coprox.security.HashFunction;
 import se.arkalix.core.coprox.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
 import se.arkalix.security.identity.OwnedIdentity;
@@ -16,7 +15,6 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Set;
 
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -49,7 +47,7 @@ public class Main {
 
             logger.info("Loading contract proxy data model");
             final var model = new Model.Builder()
-                .trustedHashFunctions(Set.of(HashFunction.SHA1, HashFunction.SHA256))
+                //.trustedHashAlgorithms(Set.of(HashAlgorithm.SHA_1, HashAlgorithm.SHA_256))
                 .build();
 
             system.provide(ContractNegotiationService.createFor(model));

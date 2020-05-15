@@ -1,28 +1,44 @@
 package se.arkalix.core.coprox.model;
 
+import se.arkalix.core.coprox.security.Hash;
+import se.arkalix.core.coprox.security.HashAlgorithm;
+
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Party {
-    private final X509Certificate certificate;
-    private final Map<Long, Session> idToSession = new ConcurrentHashMap<>();
-    private final String name;
+    private static final Duration CLOCK_SKEW_TOLERANCE = Duration.ofHours(9);
 
-    public Party(final Certificate certificate) {
+    private final X509Certificate certificate;
+    private final String commonName;
+    private final List<Hash> acceptedFingerprints;
+    private final Set<HashAlgorithm> acceptedFingerprintAlgorithms;
+    private final Hash preferredFingerprint;
+
+    public Party(final Certificate certificate, final Set<HashAlgorithm> supportedHashAlgorithms) {
         Objects.requireNonNull(certificate, "Expected certificate");
+        Objects.requireNonNull(supportedHashAlgorithms, "Expected supportedHashAlgorithms");
+
         if (!(certificate instanceof X509Certificate)) {
             throw new IllegalArgumentException("Given certificate not of type x.509");
         }
+        if (supportedHashAlgorithms.isEmpty()) {
+            throw new IllegalArgumentException("At least one hash algorithm must be provided");
+        }
+
         this.certificate = (X509Certificate) certificate;
+
         try {
-            this.name = (String) new LdapName(this.certificate.getSubjectX500Principal().getName())
+            commonName = (String) new LdapName(this.certificate.getSubjectX500Principal().getName())
                 .getRdns()
                 .stream()
                 .filter(rdn -> rdn.getType().equalsIgnoreCase("CN"))
@@ -33,49 +49,57 @@ public class Party {
         catch (final InvalidNameException exception) {
             throw new RuntimeException(exception);
         }
-    }
 
-    public String name() {
-        return name;
+        final var now = Instant.now();
+
+        final var notBefore = this.certificate.getNotBefore().toInstant();
+        if (notBefore.isBefore(now.plus(CLOCK_SKEW_TOLERANCE))) {
+            throw new IllegalArgumentException("Certificate [CN=" +
+                commonName + "] does not become valid until " + notBefore +
+                "; cannot use certificate");
+        }
+
+        final var notAfter = this.certificate.getNotAfter().toInstant();
+        if (notAfter.isAfter(now.minus(CLOCK_SKEW_TOLERANCE))) {
+            throw new IllegalArgumentException("Certificate [CN=" +
+                commonName + " ceased to be valid at " + notAfter +
+                "; cannot use certificate");
+        }
+
+        try {
+            final var certificateAsBytes = certificate.getEncoded();
+            acceptedFingerprints = supportedHashAlgorithms.stream()
+                .map(hashAlgorithm -> hashAlgorithm.hash(certificateAsBytes))
+                .collect(Collectors.toUnmodifiableList());
+            acceptedFingerprintAlgorithms = supportedHashAlgorithms;
+            preferredFingerprint = acceptedFingerprints.stream()
+                .filter(fingerprint -> fingerprint.algorithm().isCollisionSafe())
+                .findFirst()
+                .orElseGet(() -> acceptedFingerprints.get(0));
+        }
+        catch (final CertificateEncodingException exception) {
+            throw new RuntimeException("Could not get canonical encoded " +
+                "form of given certificate [commonName=" + commonName + "]");
+        }
     }
 
     public X509Certificate certificate() {
         return certificate;
     }
 
-    public Session updateSession(final long sessionId, final Candidate candidate) throws BadSessionException {
-        final var isBad = new AtomicBoolean(false);
-        final var previousSession = new AtomicReference<Session>(null);
+    public String commonName() {
+        return commonName;
+    }
 
-        idToSession.compute(sessionId, (sessionId0, session0) -> {
-            if (candidate instanceof Offer) {
-                if (session0 != null && session0.isClosedAt(candidate.createdAt())) {
-                    isBad.set(true);
-                    return session0;
-                }
-            }
-            else if (candidate instanceof Acceptance) {
-                if (session0 != null && !session0.isAcceptableAt(candidate.createdAt())) {
-                    isBad.set(true);
-                    return session0;
-                }
-            }
-            else if (candidate instanceof Rejection) {
-                if (session0 != null && session0.isClosedAt(candidate.createdAt())) {
-                    return session0;
-                }
-            }
-            else {
-                throw new IllegalStateException("Unexpected candidate type: " + candidate.getClass());
-            }
-            previousSession.set(session0);
-            return new Session(sessionId, candidate);
-        });
+    public List<Hash> acceptedFingerprints() {
+        return acceptedFingerprints;
+    }
 
-        if (isBad.get()) {
-            throw new BadSessionException(sessionId);
-        }
+    public Set<HashAlgorithm> acceptedHashAlgorithms() {
+        return acceptedFingerprintAlgorithms;
+    }
 
-        return previousSession.get();
+    public Hash preferredFingerprint() {
+        return preferredFingerprint;
     }
 }

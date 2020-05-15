@@ -1,10 +1,12 @@
 package se.arkalix.core.coprox.model;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
+import se.arkalix.core.coprox.security.Hash;
+import se.arkalix.core.coprox.security.HashAlgorithm;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Template {
     private static final Pattern PATTERN = Pattern.compile("\\{([\\w]+)}");
@@ -12,8 +14,10 @@ public class Template {
     private final String name;
     private final String text;
     private final Map<String, Span> parameters;
+    private final List<Hash> acceptedHashes;
+    private final Hash preferredHash;
 
-    public Template(final String name, final String text) {
+    public Template(final String name, final String text, final Set<HashAlgorithm> supportedHashAlgorithms) {
         this.name = Objects.requireNonNull(name, "Expected name");
         this.text = Objects.requireNonNull(text, "Expected text");
 
@@ -24,6 +28,15 @@ public class Template {
             parameters.put(key, new Span(matcher.start(), matcher.end()));
         }
         this.parameters = parameters;
+
+        final var textAsBytes = text.getBytes(StandardCharsets.UTF_8);
+        acceptedHashes = supportedHashAlgorithms.stream()
+            .map(hashAlgorithm -> hashAlgorithm.hash(textAsBytes))
+            .collect(Collectors.toUnmodifiableList());
+        preferredHash = acceptedHashes.stream()
+            .filter(fingerprint -> fingerprint.algorithm().isCollisionSafe())
+            .findFirst()
+            .orElseGet(() -> acceptedHashes.get(0));
     }
 
     public String name() {
@@ -32,6 +45,14 @@ public class Template {
 
     public String text() {
         return text;
+    }
+
+    public Collection<Hash> acceptedHashes() {
+        return acceptedHashes;
+    }
+
+    public Hash preferredHash() {
+        return preferredHash;
     }
 
     public String render(final Contract contract) {
@@ -44,7 +65,7 @@ public class Template {
                 .append(text, start, span.start())
                 .append('{')
                 .append(contract.argument(parameterEntry.getKey())
-                    .orElseThrow(() -> new IllegalStateException("Key \"" +
+                    .orElseThrow(() -> new ContractInvalidException("Key \"" +
                         parameterEntry.getKey() + "\" not specified; " +
                         " cannot render contract")))
                 .append('}');
@@ -56,7 +77,7 @@ public class Template {
             .toString();
     }
 
-    public void validate(final Contract contract) throws ContractInvalidException {
+    public void validate(final Contract contract) {
         final var c0 = new HashSet<>(contract.arguments().keySet());
         final var c1 = new HashSet<>(contract.arguments().keySet());
 

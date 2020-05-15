@@ -1,12 +1,13 @@
 package se.arkalix.core.coprox;
 
 import se.arkalix.ArService;
-import se.arkalix.core.coprox.dto.Error;
-import se.arkalix.core.coprox.dto.TrustedAcceptanceDto;
-import se.arkalix.core.coprox.dto.TrustedOfferDto;
-import se.arkalix.core.coprox.dto.TrustedRejectionDto;
-import se.arkalix.core.coprox.model.BadRequestException;
+import se.arkalix.core.coprox.model.ModelException;
 import se.arkalix.core.coprox.model.Model;
+import se.arkalix.core.plugin.ErrorBuilder;
+import se.arkalix.core.plugin.cp.TrustedContractAcceptanceDto;
+import se.arkalix.core.plugin.cp.TrustedContractCounterOfferDto;
+import se.arkalix.core.plugin.cp.TrustedContractOfferDto;
+import se.arkalix.core.plugin.cp.TrustedContractRejectionDto;
 import se.arkalix.descriptor.EncodingDescriptor;
 import se.arkalix.net.http.service.HttpService;
 
@@ -27,7 +28,7 @@ public class ContractNegotiationTrustedService {
 
             .post("/acceptances", (request, response) ->
                 request
-                    .bodyAs(TrustedAcceptanceDto.class)
+                    .bodyAs(TrustedContractAcceptanceDto.class)
                     .ifSuccess(acceptance -> {
                         model.update(acceptance);
                         response.status(NO_CONTENT);
@@ -35,24 +36,36 @@ public class ContractNegotiationTrustedService {
 
             .post("/offers", (request, response) ->
                 request
-                    .bodyAs(TrustedOfferDto.class)
+                    .bodyAs(TrustedContractOfferDto.class)
                     .ifSuccess(offer -> {
                         model.update(offer);
                         response.status(NO_CONTENT);
                     }))
 
+            .post("/counter-offers", (request, response) ->
+                request
+                    .bodyAs(TrustedContractCounterOfferDto.class)
+                    .ifSuccess(counterOffer -> {
+                        model.update(counterOffer);
+                        response.status(NO_CONTENT);
+                    }))
+
             .post("/rejections", (request, response) ->
                 request
-                    .bodyAs(TrustedRejectionDto.class)
+                    .bodyAs(TrustedContractRejectionDto.class)
                     .ifSuccess(rejection -> {
                         model.update(rejection);
                         response.status(NO_CONTENT);
                     }))
 
-            .catcher(BadRequestException.class, (throwable, request, response) -> {
+            .catcher(ModelException.class, (exception, request, response) -> {
                 response
                     .status(BAD_REQUEST)
-                    .body(Error.from(throwable));
+                    .body(new ErrorBuilder()
+                        .code(BAD_REQUEST.code())
+                        .message(exception.getMessage())
+                        .type(exception.type())
+                        .build());
                 return done();
             });
     }

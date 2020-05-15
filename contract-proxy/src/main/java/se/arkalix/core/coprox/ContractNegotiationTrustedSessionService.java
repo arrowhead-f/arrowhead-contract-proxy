@@ -19,7 +19,7 @@ public class ContractNegotiationTrustedSessionService {
             .encodings(EncodingDescriptor.JSON)
             .accessPolicy(token())
 
-            .get("/sessions/#id/candidate", (request, response) -> {
+            .get("/sessions", (request, response) -> {
                 return done();
             });
     }

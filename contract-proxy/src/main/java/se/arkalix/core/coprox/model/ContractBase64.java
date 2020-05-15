@@ -1,9 +1,12 @@
-package se.arkalix.core.coprox.dto;
+package se.arkalix.core.coprox.model;
 
+import se.arkalix.core.coprox.security.HashBase64;
 import se.arkalix.dto.DtoReadableAs;
+import se.arkalix.dto.DtoToString;
 import se.arkalix.dto.DtoWritableAs;
 import se.arkalix.dto.json.JsonName;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -11,25 +14,20 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 
 @DtoReadableAs(JSON)
 @DtoWritableAs(JSON)
-public interface Contract {
-    @JsonName("TemplateHash")
-    Hash templateHash();
+@DtoToString
+public interface ContractBase64 {
+    HashBase64 templateHash();
 
-    @JsonName("Arguments")
     Map<String, String> arguments();
 
-    default se.arkalix.core.coprox.model.Contract toContract() {
-        return new se.arkalix.core.coprox.model.Contract(templateHash().toHash(), arguments());
-    }
-
     default void writeCanonicalJson(final StringBuilder builder) {
-        builder.append("{\"TemplateHash\":");
+        builder.append("{\"templateHash\":");
         templateHash().writeCanonicalJson(builder);
-        builder.append(",\"Arguments\":{")
+        builder.append(",\"arguments\":{")
             .append(arguments()
                 .entrySet()
                 .stream()
-                .sorted()
+                .sorted(Map.Entry.comparingByKey())
                 .map(entry -> "\"" + entry.getKey() + "\":" + entry.getValue())
                 .collect(Collectors.joining(",")))
             .append("}}");
