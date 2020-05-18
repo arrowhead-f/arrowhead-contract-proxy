@@ -1,11 +1,13 @@
 package se.arkalix.core.coprox.security;
 
-public class HashAlgorithmUnsupportedException extends IllegalArgumentException {
+import se.arkalix.core.coprox.util.UnsatisfiableRequestException;
+
+public class HashAlgorithmUnsupportedException extends UnsatisfiableRequestException {
     public HashAlgorithmUnsupportedException(final String name) {
-        super(name);
+        super("UNSUPPORTED_HASH_ALGORITHM", name);
     }
 
     public HashAlgorithmUnsupportedException(final String name, final Throwable cause) {
-        super(name, cause);
+        super("UNSUPPORTED_HASH_ALGORITHM", name, cause);
     }
 }

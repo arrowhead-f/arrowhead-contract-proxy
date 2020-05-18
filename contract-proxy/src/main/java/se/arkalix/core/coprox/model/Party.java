@@ -21,7 +21,6 @@ public class Party {
     private final X509Certificate certificate;
     private final String commonName;
     private final List<Hash> acceptedFingerprints;
-    private final Set<HashAlgorithm> acceptedFingerprintAlgorithms;
     private final Hash preferredFingerprint;
 
     public Party(final Certificate certificate, final Set<HashAlgorithm> supportedHashAlgorithms) {
@@ -71,7 +70,6 @@ public class Party {
             acceptedFingerprints = supportedHashAlgorithms.stream()
                 .map(hashAlgorithm -> hashAlgorithm.hash(certificateAsBytes))
                 .collect(Collectors.toUnmodifiableList());
-            acceptedFingerprintAlgorithms = supportedHashAlgorithms;
             preferredFingerprint = acceptedFingerprints.stream()
                 .filter(fingerprint -> fingerprint.algorithm().isCollisionSafe())
                 .findFirst()
@@ -93,10 +91,6 @@ public class Party {
 
     public List<Hash> acceptedFingerprints() {
         return acceptedFingerprints;
-    }
-
-    public Set<HashAlgorithm> acceptedHashAlgorithms() {
-        return acceptedFingerprintAlgorithms;
     }
 
     public Hash preferredFingerprint() {

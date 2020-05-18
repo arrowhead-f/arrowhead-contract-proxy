@@ -1,21 +1,20 @@
 package se.arkalix.core.coprox.model;
 
-import se.arkalix.core.plugin.cp.ContractSessionStatus;
+import se.arkalix.core.plugin.cp.ContractNegotiationStatus;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public class ContractSessionEvent {
-    private final long sessionId;
+public class ContractNegotiationEvent {
+    private final long negotiationId;
     private final String offerorName;
     private final String receiverName;
-    private final ContractSessionStatus status;
+    private final ContractNegotiationStatus status;
     private final Set<String> templateNames;
 
-    public ContractSessionEvent(final Builder builder) {
-        sessionId = Objects.requireNonNull(builder.sessionId, "Expected sessionId");
+    private ContractNegotiationEvent(final Builder builder) {
+        negotiationId = Objects.requireNonNull(builder.negotiationId, "Expected negotiationId");
         offerorName = Objects.requireNonNull(builder.offerorName, "Expected offerorName");
         receiverName = Objects.requireNonNull(builder.receiverName, "Expected receiverName");
         status = Objects.requireNonNull(builder.status, "Expected status");
@@ -23,8 +22,8 @@ public class ContractSessionEvent {
             Objects.requireNonNull(builder.templateNames, "Expected templateNames"));
     }
 
-    public long sessionId() {
-        return sessionId;
+    public long negotiationId() {
+        return negotiationId;
     }
 
     public String offerorName() {
@@ -35,7 +34,7 @@ public class ContractSessionEvent {
         return receiverName;
     }
 
-    public ContractSessionStatus status() {
+    public ContractNegotiationStatus status() {
         return status;
     }
 
@@ -44,14 +43,14 @@ public class ContractSessionEvent {
     }
 
     public static class Builder {
-        private Long sessionId;
+        private Long negotiationId;
         private String offerorName;
         private String receiverName;
-        private ContractSessionStatus status;
+        private ContractNegotiationStatus status;
         private Set<String> templateNames;
 
-        public Builder sessionId(final Long sessionId) {
-            this.sessionId = sessionId;
+        public Builder negotiationId(final Long negotiationId) {
+            this.negotiationId = negotiationId;
             return this;
         }
 
@@ -65,7 +64,7 @@ public class ContractSessionEvent {
             return this;
         }
 
-        public Builder status(final ContractSessionStatus status) {
+        public Builder status(final ContractNegotiationStatus status) {
             this.status = status;
             return this;
         }
@@ -75,8 +74,8 @@ public class ContractSessionEvent {
             return this;
         }
 
-        public ContractSessionEvent build() {
-            return new ContractSessionEvent(this);
+        public ContractNegotiationEvent build() {
+            return new ContractNegotiationEvent(this);
         }
     }
 }

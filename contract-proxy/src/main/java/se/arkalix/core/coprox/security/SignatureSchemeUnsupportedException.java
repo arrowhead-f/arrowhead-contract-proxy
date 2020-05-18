@@ -1,7 +1,9 @@
 package se.arkalix.core.coprox.security;
 
-public class SignatureSchemeUnsupportedException extends IllegalArgumentException {
+import se.arkalix.core.coprox.util.UnsatisfiableRequestException;
+
+public class SignatureSchemeUnsupportedException extends UnsatisfiableRequestException {
     public SignatureSchemeUnsupportedException(final String name, final Throwable cause) {
-        super(name, cause);
+        super("UNSUPPORTED_SIGNATURE_SCHEME", name, cause);
     }
 }

@@ -2,6 +2,8 @@ package se.arkalix.core.coprox.model;
 
 import se.arkalix.core.coprox.security.HashBase64;
 import se.arkalix.core.coprox.security.SignatureBase64;
+import se.arkalix.core.coprox.security.SignatureBase64Builder;
+import se.arkalix.core.coprox.security.SignatureBase64Dto;
 import se.arkalix.dto.DtoReadableAs;
 import se.arkalix.dto.DtoToString;
 import se.arkalix.dto.DtoWritableAs;
@@ -13,8 +15,8 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 @DtoReadableAs(JSON)
 @DtoWritableAs(JSON)
 @DtoToString
-public interface SignedContractAcceptance {
-    long sessionId();
+public interface SignedContractAcceptance extends SignedMessage {
+    long negotiationId();
 
     HashBase64 acceptorFingerprint();
 
@@ -22,9 +24,27 @@ public interface SignedContractAcceptance {
 
     HashBase64 offerHash();
 
+    @Override
     SignatureBase64 signature();
 
-    default byte[] toCanonicalJson() {
+    default SignedContractAcceptanceDto sign(final OwnedParty party) {
+        if (!party.signatureScheme().equals(signature().scheme())) {
+            throw new IllegalArgumentException("Signature scheme in this " +
+                "acceptance must match that of the provided party; " +
+                signature().scheme() + " != " + party.signatureScheme());
+        }
+        final var self = (SignedContractAcceptanceDto) this;
+        return new SignedContractAcceptanceBuilder()
+            .negotiationId(self.negotiationId())
+            .acceptorFingerprint(self.acceptorFingerprint())
+            .offerorFingerprint(self.offerorFingerprint())
+            .offerHash(self.offerHash())
+            .signature(SignatureBase64.from(party.sign(self.signature().timestamp(), self.toCanonicalForm())))
+            .build();
+    }
+
+    @Override
+    default byte[] toCanonicalForm() {
         final var builder = new StringBuilder();
         writeCanonicalJson(builder);
         return builder.toString().getBytes(StandardCharsets.UTF_8);
@@ -32,8 +52,8 @@ public interface SignedContractAcceptance {
 
     default void writeCanonicalJson(final StringBuilder builder) {
         builder
-            .append("{\"sessionId\":")
-            .append(sessionId());
+            .append("{\"negotiationId\":")
+            .append(negotiationId());
 
         builder.append(",\"acceptorFingerprint\":");
         acceptorFingerprint().writeCanonicalJson(builder);

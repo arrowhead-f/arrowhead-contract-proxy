@@ -9,17 +9,17 @@ import se.arkalix.net.http.service.HttpService;
 import static se.arkalix.security.access.AccessPolicy.token;
 import static se.arkalix.util.concurrent.Future.done;
 
-public class ContractNegotiationTrustedSessionService {
-    private ContractNegotiationTrustedSessionService() {}
+public class HttpJsonTrustedContractObservationProvider {
+    private HttpJsonTrustedContractObservationProvider() {}
 
     public static ArService createFor(final ArSystem system, final Model model) {
         return new HttpService()
-            .name("contract-negotiation-trusted-session")
-            .basePath("/negotiation-trusted")
+            .name("trusted-contract-observation")
+            .basePath("/trusted-observation")
             .encodings(EncodingDescriptor.JSON)
             .accessPolicy(token())
 
-            .get("/sessions", (request, response) -> {
+            .get("/negotiations", (request, response) -> {
                 return done();
             });
     }

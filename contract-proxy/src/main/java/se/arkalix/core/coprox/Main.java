@@ -50,9 +50,9 @@ public class Main {
                 //.trustedHashAlgorithms(Set.of(HashAlgorithm.SHA_1, HashAlgorithm.SHA_256))
                 .build();
 
-            system.provide(ContractNegotiationService.createFor(model));
-            system.provide(ContractNegotiationTrustedService.createFor(model));
-            system.provide(ContractNegotiationTrustedSessionService.createFor(system, model));
+            system.provide(HttpJsonContractNegotiationProvider.createFor(model));
+            system.provide(HttpJsonTrustedContractNegotiationProvider.createFor(model));
+            system.provide(HttpJsonTrustedContractObservationProvider.createFor(system, model));
 
             logger.info("Contract proxy system served via: {}", system.localAddress());
         }

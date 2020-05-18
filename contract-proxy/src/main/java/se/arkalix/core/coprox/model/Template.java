@@ -77,9 +77,9 @@ public class Template {
             .toString();
     }
 
-    public void validate(final Contract contract) {
-        final var c0 = new HashSet<>(contract.arguments().keySet());
-        final var c1 = new HashSet<>(contract.arguments().keySet());
+    public void validate(final Map<String, String> arguments) {
+        final var c0 = new HashSet<>(arguments.keySet());
+        final var c1 = new HashSet<>(arguments.keySet());
 
         final var t0 = new HashSet<>(parameters.keySet());
         final var t1 = new HashSet<>(parameters.keySet());
@@ -90,7 +90,7 @@ public class Template {
         final var builder = new StringBuilder();
         if (c0.size() != 0) {
             builder
-                .append("The following contract arguments are not defined in the template \"")
+                .append("The following arguments in the given contract are not defined in the template \"")
                 .append(name)
                 .append("\": [")
                 .append(String.join(", ", c0))
@@ -98,14 +98,16 @@ public class Template {
         }
         if (t1.size() != 0) {
             if (builder.length() != 0) {
-                builder.append("; the following template parameters of \"");
+                builder.append(" and the following template parameters");
             }
             else {
-                builder.append("The following template parameters of \"");
+                builder
+                    .append("The following parameters in the template \"")
+                    .append(name)
+                    .append('\"');
             }
             builder
-                .append(name)
-                .append("\" are not specified in the given contract: [")
+                .append(" are not specified in the given contract: [")
                 .append(String.join(", ", t1))
                 .append(']');
         }
@@ -113,6 +115,31 @@ public class Template {
             builder.append("; contract not valid");
             throw new ContractInvalidException(builder.toString());
         }
+
+        for (final var entry : arguments.entrySet()) {
+            final var value = entry.getValue();
+            if (value == null || value.isBlank()) {
+                if (builder.length() == 0) {
+                    builder
+                        .append("The following contract arguments may not " +
+                            "be left empty: [")
+                        .append(entry.getKey());
+                }
+                else {
+                    builder
+                        .append(", ")
+                        .append(entry.getKey());
+                }
+            }
+        }
+        if (builder.length() != 0) {
+            builder.append("]; contract not valid");
+            throw new ContractInvalidException(builder.toString());
+        }
+    }
+
+    public void validate(final Contract contract) {
+        validate(contract.arguments());
     }
 
     @Override

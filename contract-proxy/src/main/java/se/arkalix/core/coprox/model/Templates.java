@@ -1,6 +1,7 @@
 package se.arkalix.core.coprox.model;
 
 import se.arkalix.core.coprox.security.Hash;
+import se.arkalix.core.coprox.util.UnsatisfiableRequestException;
 
 import java.util.*;
 
@@ -40,11 +41,11 @@ public class Templates {
         this.hashToTemplate = Collections.unmodifiableMap(hashToTemplate);
     }
 
-    public Optional<Template> getByName(final String name) throws ModelException {
+    public Optional<Template> getByName(final String name) throws UnsatisfiableRequestException {
         return Optional.ofNullable(nameToTemplate.get(name));
     }
 
-    public Optional<Template> getByHash(final Hash hash) throws ModelException {
+    public Optional<Template> getByHash(final Hash hash) throws UnsatisfiableRequestException {
         return Optional.ofNullable(hashToTemplate.get(hash));
     }
 }

@@ -24,6 +24,14 @@ public interface SignatureBase64 {
         return Base64.getDecoder().decode(sum());
     }
 
+    static SignatureBase64Dto emptyFrom(final Instant timestamp, final SignatureScheme scheme) {
+        return new SignatureBase64Builder()
+            .timestamp(timestamp)
+            .scheme(scheme)
+            .sum("")
+            .build();
+    }
+
     static SignatureBase64Dto from(final Signature signature) {
         return new SignatureBase64Builder()
             .timestamp(signature.timestamp())
@@ -44,12 +52,11 @@ public interface SignatureBase64 {
         builder.append("{\"timestamp\":\"")
             .append(timestamp())
             .append("\",\"scheme\":\"")
-            .append(scheme());
+            .append(scheme())
+            .append("\",\"sum\":\"");
 
         if (includeSum) {
-            builder
-                .append("\",\"sum\":\"")
-                .append(sum());
+            builder.append(sum());
         }
 
         builder.append("\"}");
