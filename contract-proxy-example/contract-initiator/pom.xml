@@ -48,7 +48,7 @@
                     <archive>
                         <index>true</index>
                         <manifest>
-                            <mainClass>se.arkalix.core.coprox.example.init.Main</mainClass>
+                            <mainClass>se.arkalix.core.cp.example.init.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -52,7 +52,7 @@
                     <archive>
                         <index>true</index>
                         <manifest>
-                            <mainClass>se.arkalix.core.coprox.Main</mainClass>
+                            <mainClass>se.arkalix.core.cp.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
