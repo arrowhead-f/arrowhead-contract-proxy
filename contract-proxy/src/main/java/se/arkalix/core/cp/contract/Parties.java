@@ -7,10 +7,12 @@ import java.util.*;
 public class Parties {
     private final Map<String, Party> commonNameToParty;
     private final Map<Hash, Party> fingerprintToParty;
+    private final List<OwnedParty> ownedParties;
 
     public Parties(final Collection<Party> parties) {
         final var commonNameToParty = new HashMap<String, Party>();
         final var fingerprintToParty = new HashMap<Hash, Party>();
+        final var ownedParties = new ArrayList<OwnedParty>();
         for (final var party : parties) {
             var conflictingParty = commonNameToParty.put(party.commonName(), party);
             if (conflictingParty != null) {
@@ -31,9 +33,18 @@ public class Parties {
                         "fingerprints and counter-parties");
                 }
             }
+
+            if (party instanceof OwnedParty) {
+                ownedParties.add((OwnedParty) party);
+            }
         }
         this.commonNameToParty = Collections.unmodifiableMap(commonNameToParty);
         this.fingerprintToParty = Collections.unmodifiableMap(fingerprintToParty);
+        this.ownedParties = Collections.unmodifiableList(ownedParties);
+    }
+
+    public List<OwnedParty> getAllOwnedParties() {
+        return ownedParties;
     }
 
     public Optional<Party> getAnyByCommonName(final String commonName) {

@@ -11,6 +11,8 @@ import se.arkalix.core.plugin.ErrorBuilder;
 import se.arkalix.descriptor.EncodingDescriptor;
 import se.arkalix.net.http.service.HttpService;
 
+import java.util.Map;
+
 import static se.arkalix.net.http.HttpStatus.BAD_REQUEST;
 import static se.arkalix.net.http.HttpStatus.NO_CONTENT;
 import static se.arkalix.security.access.AccessPolicy.token;
@@ -26,6 +28,9 @@ public class HttpJsonContractNegotiationProvider {
             .basePath("/negotiation")
             .encodings(EncodingDescriptor.JSON)
             .accessPolicy(system.isSecure() ? token() : unrestricted())
+
+            // This is only advertising one party. TODO: Figure out way to advertise all owned parties.
+            .metadata(Map.of("party", proxy.parties().getAllOwnedParties().get(0).commonName()))
 
             .post("/acceptances", (request, response) ->
                 request

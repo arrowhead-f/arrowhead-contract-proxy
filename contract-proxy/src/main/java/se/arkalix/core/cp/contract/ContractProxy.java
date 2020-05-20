@@ -13,7 +13,6 @@ import se.arkalix.core.plugin.cp.TrustedContractRejectionDto;
 import se.arkalix.util.concurrent.Future;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static se.arkalix.core.plugin.cp.ContractNegotiationStatus.*;
 
@@ -28,10 +27,8 @@ public class ContractProxy {
     private final ContractNegotiations negotiations;
 
     public ContractProxy(final Builder builder) {
-        acceptedHashAlgorithms = Objects.requireNonNullElseGet(builder.acceptedHashAlgorithms, () ->
-            HashAlgorithm.ALL.stream().filter(HashAlgorithm::isCollisionSafe).collect(Collectors.toList()))
-            .stream()
-            .collect(Collectors.toUnmodifiableSet());
+        acceptedHashAlgorithms = Set.copyOf(Objects.requireNonNull(builder.acceptedHashAlgorithms,
+            "Expected acceptedHashAlgorithms"));
         if (acceptedHashAlgorithms.isEmpty()) {
             throw new IllegalArgumentException("Expected acceptedHashAlgorithms.size() > 0");
         }
@@ -62,6 +59,10 @@ public class ContractProxy {
 
     public Optional<ContractNegotiation> getNegotiationByNamesAndId(final String name1, final String name2, final long id) {
         return negotiations.getBy(name1, name2, id);
+    }
+
+    public Parties parties() {
+        return parties;
     }
 
     public Templates templates() {
@@ -200,13 +201,13 @@ public class ContractProxy {
     }
 
     public static class Builder {
-        private List<HashAlgorithm> acceptedHashAlgorithms;
-        private List<Party> counterParties;
-        private List<OwnedParty> ownedParties;
+        private Collection<HashAlgorithm> acceptedHashAlgorithms;
+        private Collection<Party> counterParties;
+        private Collection<OwnedParty> ownedParties;
         private ContractRelay relay;
-        private List<Template> templates;
+        private Collection<Template> templates;
 
-        public Builder acceptedHashAlgorithms(final List<HashAlgorithm> acceptedHashAlgorithms) {
+        public Builder acceptedHashAlgorithms(final Collection<HashAlgorithm> acceptedHashAlgorithms) {
             this.acceptedHashAlgorithms = acceptedHashAlgorithms;
             return this;
         }
@@ -215,7 +216,7 @@ public class ContractProxy {
             return acceptedHashAlgorithms(Arrays.asList(acceptedHashAlgorithms));
         }
 
-        public Builder counterParties(final List<Party> counterParties) {
+        public Builder counterParties(final Collection<Party> counterParties) {
             this.counterParties = counterParties;
             return this;
         }
@@ -224,7 +225,7 @@ public class ContractProxy {
             return counterParties(Arrays.asList(counterParties));
         }
 
-        public Builder ownedParties(final List<OwnedParty> ownedParties) {
+        public Builder ownedParties(final Collection<OwnedParty> ownedParties) {
             this.ownedParties = ownedParties;
             return this;
         }
@@ -238,7 +239,7 @@ public class ContractProxy {
             return this;
         }
 
-        public Builder templates(final List<Template> templates) {
+        public Builder templates(final Collection<Template> templates) {
             this.templates = templates;
             return this;
         }
