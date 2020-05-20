@@ -1,0 +1,5 @@
+Hereby {Buyer} accepts to take {Quantity}
+units of {ArticleNumber} from {Seller} in
+exchange for {Price} {Currency}. The units
+are to be paid for and delivered no later
+than {PaymentDate}. [...]

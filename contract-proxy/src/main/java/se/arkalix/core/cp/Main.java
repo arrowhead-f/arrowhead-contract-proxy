@@ -213,11 +213,11 @@ public class Main {
         }
 
         var serviceRegistrySocketAddress = properties
-            .getInetSocketAddressOrThrow("kalix.integrator.service-registry.host");
+            .getInetSocketAddressOrThrow("kalix.core.service-registry.host");
         if (serviceRegistrySocketAddress.getPort() == 0) {
             serviceRegistrySocketAddress = InetSocketAddress.createUnresolved(
                 serviceRegistrySocketAddress.getHostString(),
-                properties.getInteger("kalix.integrator.service-registry.port").orElse(0));
+                properties.getInteger("kalix.core.service-registry.port").orElse(0));
         }
 
         return builder
