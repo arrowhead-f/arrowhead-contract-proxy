@@ -1,0 +1,192 @@
+version: "3"
+
+services:
+
+  # UTILITY CONTAINERS
+
+  mysql.cp:
+    container_name: mysql.cp
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - vol.mysql.cp:/var/lib/mysql
+      - ./scripts/arrowhead.sql:/docker-entrypoint-initdb.d/arrowhead.sql
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.5
+
+  management_tool.cp:
+    container_name: management_tool.cp
+    image: management-tool
+    environment:
+      - ARROWHEAD_AUTH_URL=https://172.23.1.10:8445
+      - ARROWHEAD_ORCH_URL=https://172.23.1.11:8441
+      - ARROWHEAD_SR_URL=https://172.23.1.12:8443
+    ports:
+      - 80:80
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.6
+
+  configurator.cp:
+    container_name: configurator.cp
+    build: cloud-configurator
+    volumes:
+      - ./configuration/crypto/sysop.p12:/opt/keystore.p12
+      - ./configuration/crypto/truststore.p12:/opt/truststore.p12
+      - ./scripts/wait-for.sh:/opt/wait-for.sh
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && ./wait-for.sh contract-proxy-reactor.cp 8902 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar cloud-configurator.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.9
+
+  # CORE SYSTEMS
+
+  authorization.cp:
+    container_name: authorization.cp
+    image: svetlint/authorization:latest
+    depends_on:
+      - mysql.cp
+    volumes:
+      - ./configuration/crypto/authorization.p12:/authorization/keystore.p12
+      - ./configuration/crypto/truststore.p12:/authorization/truststore.p12
+      - ./configuration/authorization.properties:/authorization/application.properties
+      - ./scripts/wait-for.sh:/authorization/wait-for.sh
+    ports:
+      - 8445:8445
+    command: ["/bin/bash", "-c", "cd /authorization && ./wait-for.sh service_registry.cp 8443 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-authorization.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.10
+
+  orchestrator.cp:
+    container_name: orchestrator.cp
+    image: svetlint/orchestrator:latest
+    depends_on:
+      - mysql.cp
+    volumes:
+      - ./configuration/crypto/orchestrator.p12:/orchestrator/keystore.p12
+      - ./configuration/crypto/truststore.p12:/orchestrator/truststore.p12
+      - ./configuration/orchestrator.properties:/orchestrator/application.properties
+      - ./scripts/wait-for.sh:/orchestrator/wait-for.sh
+    ports:
+      - 8441:8441
+    command: ["/bin/bash", "-c", "cd /orchestrator && ./wait-for.sh service_registry.cp 8443 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-orchestrator.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.11
+
+  service_registry.cp:
+    container_name: service_registry.cp
+    image: svetlint/serviceregistry:latest
+    depends_on:
+      - mysql.cp
+    volumes:
+      - ./configuration/crypto/service_registry.p12:/serviceregistry/keystore.p12
+      - ./configuration/crypto/truststore.p12:/serviceregistry/truststore.p12
+      - ./configuration/service_registry.properties:/serviceregistry/application.properties
+      - ./scripts/wait-for.sh:/serviceregistry/wait-for.sh
+    ports:
+      - 8443:8443
+    command: ["/bin/bash", "-c", "cd /serviceregistry && ./wait-for.sh mysql.cp 3306 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-serviceregistry.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.12
+
+  event_handler.cp:
+    container_name: event_handler.cp
+    image: svetlint/eventhandler:latest
+    depends_on:
+      - mysql.cp
+    volumes:
+      - ./configuration/crypto/event_handler.p12:/eventhandler/keystore.p12
+      - ./configuration/crypto/truststore.p12:/eventhandler/truststore.p12
+      - ./configuration/event_handler.properties:/eventhandler/application.properties
+      - ./scripts/wait-for.sh:/eventhandler/wait-for.sh
+    ports:
+      - 8455:8455
+    command: ["/bin/bash", "-c", "cd /eventhandler && ./wait-for.sh service_registry.cp 8443 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-eventhandler.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.1.13
+
+  # INITIATOR SYSTEMS
+
+  contract-initiator.cp:
+    container_name: contract-initiator.cp
+    build: contract-initiator
+    volumes:
+      - ./configuration/crypto/contract-initiator.p12:/opt/keystore.p12
+      - ./configuration/crypto/truststore.p12:/opt/truststore.p12
+      - ./scripts/wait-for.sh:/opt/wait-for.sh
+    ports:
+      - 9001:9001
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.10
+
+  contract-proxy-initiator.cp:
+    container_name: contract-proxy-initiator.cp
+    build: ../contract-proxy
+    volumes:
+      - ./configuration/contract-templates/simple-delivery.txt:/opt/simple-delivery.txt
+      - ./configuration/contract-templates/simple-purchase.txt:/opt/simple-purchase.txt
+      - ./configuration/crypto/contract-proxy-initiator.p12:/opt/keystore.p12
+      - ./configuration/crypto/contract-proxy-initiator-counter-parties.p12:/opt/counter-parties.p12
+      - ./configuration/crypto/contract-proxy-initiator-owned-parties.p12:/opt/owned-parties.p12
+      - ./configuration/crypto/truststore.p12:/opt/truststore.p12
+      - ./configuration/contract-proxy-initiator.properties:/opt/application.properties
+      - ./scripts/wait-for.sh:/opt/wait-for.sh
+    ports:
+      - 8901:8901
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh authorization.cp 8445 && ./wait-for.sh orchestrator.cp 8441 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.2.11
+
+  # REACTOR SYSTEMS
+
+  contract-reactor.cp:
+    container_name: contract-reactor.cp
+    build: contract-reactor
+    volumes:
+      - ./configuration/crypto/contract-reactor.p12:/opt/keystore.p12
+      - ./configuration/crypto/truststore.p12:/opt/truststore.p12
+      - ./scripts/wait-for.sh:/opt/wait-for.sh
+    ports:
+      - 9002:9002
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-reactor.cp 8902 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-reactor.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.3.10
+
+  contract-proxy-reactor.cp:
+    container_name: contract-proxy-reactor.cp
+    build: ../contract-proxy
+    volumes:
+      - ./configuration/contract-templates/simple-delivery.txt:/opt/simple-delivery.txt
+      - ./configuration/contract-templates/simple-purchase.txt:/opt/simple-purchase.txt
+      - ./configuration/crypto/contract-proxy-reactor.p12:/opt/keystore.p12
+      - ./configuration/crypto/contract-proxy-reactor-counter-parties.p12:/opt/counter-parties.p12
+      - ./configuration/crypto/contract-proxy-reactor-owned-parties.p12:/opt/owned-parties.p12
+      - ./configuration/crypto/truststore.p12:/opt/truststore.p12
+      - ./configuration/contract-proxy-reactor.properties:/opt/application.properties
+      - ./scripts/wait-for.sh:/opt/wait-for.sh
+    ports:
+      - 8902:8902
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh authorization.cp 8445 && ./wait-for.sh orchestrator.cp 8441 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
+    networks:
+      clouds:
+        ipv4_address: 172.23.3.11
+
+volumes:
+  vol.mysql.cp:
+    external: false
+
+networks:
+  clouds:
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

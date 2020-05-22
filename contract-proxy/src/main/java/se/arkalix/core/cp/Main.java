@@ -13,6 +13,7 @@ import se.arkalix.core.cp.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
 import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
+import se.arkalix.util.concurrent.Futures;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -22,7 +23,10 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,16 +62,32 @@ public class Main {
             logger.info("Loading contract proxy data model");
             final var proxy = createContractProxy(system, properties);
 
-            system.provide(HttpJsonContractNegotiationProvider.createFor(system, proxy));
-            system.provide(HttpJsonTrustedContractNegotiationProvider.createFor(system, proxy));
-            system.provide(HttpJsonTrustedContractObservationProvider.createFor(system, proxy));
-            system.provide(HttpJsonTrustedContractManagementProvider.createFor(system, proxy));
+            system.provide(HttpJsonContractNegotiationProvider.createFor(system, proxy))
+                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .onFailure(Main::panic);
 
-            logger.info("Contract proxy system served via: {}", system.localAddress());
+            system.provide(HttpJsonTrustedContractNegotiationProvider.createFor(system, proxy))
+                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .onFailure(Main::panic);
+
+            system.provide(HttpJsonTrustedContractObservationProvider.createFor(system, proxy))
+                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .onFailure(Main::panic);
+
+            system.provide(HttpJsonTrustedContractManagementProvider.createFor(system, proxy))
+                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .onFailure(Main::panic);
+
+            logger.info("Contract proxy system about to be served via: {}", system.localSocketAddress());
         }
         catch (final Throwable throwable) {
-            logger.error("Failed to start contract proxy", throwable);
+            panic(throwable);
         }
+    }
+
+    private static void panic(final Throwable cause) {
+        logger.error("Failed to start contract proxy", cause);
+        System.exit(1);
     }
 
     private static ContractProxy createContractProxy(final ArSystem system, final Properties properties)
@@ -168,7 +188,7 @@ public class Main {
         }
 
         return new ContractProxy.Builder()
-            .acceptedHashAlgorithms()
+            .acceptedHashAlgorithms(acceptedHashAlgorithms)
             .counterParties(counterParties)
             .ownedParties(ownedParties)
             .templates(templates)

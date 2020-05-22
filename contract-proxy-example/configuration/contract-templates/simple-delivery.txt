@@ -1,0 +1,7 @@
+Hereby {Carrier} accepts to deliver
+{Quantity} units of type {UnitType} from
+{PickUpPoint} at {PickUpTime} to
+{DeliveryPoint} at {DeliveryTime} on
+behalf of {Sender} to {Receiver}. The
+delivery is to be paid no later than
+{PaymentDate}. [...]

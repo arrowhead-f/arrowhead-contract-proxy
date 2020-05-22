@@ -2,7 +2,6 @@ package se.arkalix.core.cp.contract;
 
 import se.arkalix.core.cp.security.Hash;
 import se.arkalix.core.cp.security.HashAlgorithm;
-import se.arkalix.description.ProviderDescription;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -53,14 +52,14 @@ public class Party {
         final var now = Instant.now();
 
         final var notBefore = this.certificate.getNotBefore().toInstant();
-        if (notBefore.isBefore(now.plus(CLOCK_SKEW_TOLERANCE))) {
+        if (now.plus(CLOCK_SKEW_TOLERANCE).isBefore(notBefore)) {
             throw new IllegalArgumentException("Certificate [CN=" +
                 commonName + "] does not become valid until " + notBefore +
                 "; cannot use certificate");
         }
 
         final var notAfter = this.certificate.getNotAfter().toInstant();
-        if (notAfter.isAfter(now.minus(CLOCK_SKEW_TOLERANCE))) {
+        if (now.minus(CLOCK_SKEW_TOLERANCE).isAfter(notAfter)) {
             throw new IllegalArgumentException("Certificate [CN=" +
                 commonName + " ceased to be valid at " + notAfter +
                 "; cannot use certificate");

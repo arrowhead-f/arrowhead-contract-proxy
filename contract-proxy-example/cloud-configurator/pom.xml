@@ -7,9 +7,11 @@
         <groupId>se.arkalix.core.cp</groupId>
         <artifactId>contract-proxy-parent</artifactId>
         <version>${revision}</version>
+        <relativePath>../../</relativePath>
     </parent>
 
-    <artifactId>contract-proxy</artifactId>
+    <groupId>se.arkalix.core.cp.example.configurator</groupId>
+    <artifactId>cloud-configurator</artifactId>
     <version>${revision}</version>
     <packaging>jar</packaging>
 
@@ -31,12 +33,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
             <version>${slf4j.version}</version>
@@ -46,25 +42,13 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven.jar.version}</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>se.arkalix.core.cp.Main</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>${maven.assembly.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>se.arkalix.core.cp.Main</mainClass>
+                            <mainClass>se.arkalix.core.cp.example.configurator.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
