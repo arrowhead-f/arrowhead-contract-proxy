@@ -5,8 +5,6 @@ import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
 
 import java.net.ServerSocket;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 public class Main {
     public static void main(final String[] args) {
@@ -59,18 +57,16 @@ public class Main {
                 .flatMap(ignored -> authorizer.authorize(rules))
                 .flatMap(ignored -> orchestrator.addRules(rules))
                 .fork(ignored -> {
-                    try {
-                        final var server = new ServerSocket(9999);
-                        final var socket = server.accept();
-                        final var channel = socket.getChannel();
-                        channel.configureBlocking(true);
-                        channel.write(ByteBuffer.wrap("I'm done!".getBytes(StandardCharsets.UTF_8)));
-                        channel.close();
-                        System.out.println("I'm done!");
-                        System.exit(0);
-                    }
-                    catch (final Throwable throwable) {
-                        throwable.printStackTrace();
+                    // Allow for other systems to determine if configuration is
+                    // done by connecting to port 9999 via TCP.
+                    while (!Thread.interrupted()) {
+                        try {
+                            final var server = new ServerSocket(9999);
+                            server.accept().getChannel().close();
+                        }
+                        catch (final Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
                     }
                 })
                 .onFailure(Throwable::printStackTrace);

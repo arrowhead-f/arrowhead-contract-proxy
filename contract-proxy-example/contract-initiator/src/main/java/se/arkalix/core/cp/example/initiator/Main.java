@@ -11,6 +11,8 @@ import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
 
 import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.logging.Level;
 
 import static se.arkalix.descriptor.EncodingDescriptor.JSON;
 import static se.arkalix.net.http.HttpStatus.OK;
@@ -57,7 +59,11 @@ public class Main {
                             "HttpJsonTrustedContractNegotiatorPlugin is " +
                             "available; cannot negotiate"));
 
-                    // TODO: ...
+                    final var socket = new Socket();
+                    socket.connect(new InetSocketAddress("172.23.1.9", 9999));
+                    socket.close();
+
+                    logger.info("AFTER CONFIGURATOR");
                 })
 
                 .onFailure(Main::panic);
@@ -70,5 +76,15 @@ public class Main {
     private static void panic(final Throwable cause) {
         logger.error("Failed to start contract initiator", cause);
         System.exit(1);
+    }
+
+    static {
+        final var logLevel = Level.INFO;
+        System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %5$s%6$s%n");
+        final var root = java.util.logging.Logger.getLogger("");
+        root.setLevel(logLevel);
+        for (final var handler : root.getHandlers()) {
+            handler.setLevel(logLevel);
+        }
     }
 }
