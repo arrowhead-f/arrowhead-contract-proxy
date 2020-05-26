@@ -4,14 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.arkalix.ArSystem;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
-import se.arkalix.core.plugin.cp.ArTrustedContractNegotiatorPluginFacade;
-import se.arkalix.core.plugin.cp.HttpJsonTrustedContractNegotiatorPlugin;
+import se.arkalix.core.plugin.cp.*;
 import se.arkalix.net.http.service.HttpService;
 import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import static se.arkalix.descriptor.EncodingDescriptor.JSON;
@@ -63,7 +65,31 @@ public class Main {
                     socket.connect(new InetSocketAddress("172.23.1.9", 9999));
                     socket.close();
 
-                    logger.info("AFTER CONFIGURATOR");
+                    final var contract0 = new TrustedContractBuilder()
+                        .templateName("simple-purchase.txt")
+                        .arguments(Map.of()) // TODO ...
+                        .build();
+
+                    facade.offer("initiator", "reactor", Duration.ofHours(2), List.of(contract0),
+                        new TrustedContractNegotiatorHandler() {
+                            @Override
+                            public void onAccept(final TrustedContractNegotiationDto negotiation) {
+                                // TODO ...
+                            }
+
+                            @Override
+                            public void onOffer(
+                                final TrustedContractNegotiationDto negotiation,
+                                final TrustedContractNegotiatorResponder responder)
+                            {
+                                // TODO ...
+                            }
+
+                            @Override
+                            public void onReject(final TrustedContractNegotiationDto negotiation) {
+                                // TODO ...
+                            }
+                        });
                 })
 
                 .onFailure(Main::panic);

@@ -4,14 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.arkalix.ArSystem;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
-import se.arkalix.core.plugin.cp.ArTrustedContractNegotiatorPluginFacade;
-import se.arkalix.core.plugin.cp.HttpJsonTrustedContractNegotiatorPlugin;
+import se.arkalix.core.plugin.cp.*;
 import se.arkalix.net.http.service.HttpService;
 import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
 
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.logging.Level;
 
 import static se.arkalix.descriptor.EncodingDescriptor.JSON;
@@ -59,13 +60,88 @@ public class Main {
                             "HttpJsonTrustedContractNegotiatorPlugin is " +
                             "available; cannot negotiate"));
 
-                    final var socket = new Socket();
-                    socket.connect(new InetSocketAddress("172.23.1.9", 9999));
-                    socket.close();
+                    facade.listen("reactor", () -> new TrustedContractNegotiatorHandler() {
+                        @Override
+                        public void onAccept(final TrustedContractNegotiationDto negotiation) {
+                            throw new IllegalStateException();
+                        }
 
-                    logger.info("AFTER CONFIGURATOR");
+                        @Override
+                        public void onOffer(
+                            final TrustedContractNegotiationDto negotiation,
+                            final TrustedContractNegotiatorResponder responder)
+                        {
+                            final var offer = negotiation.offer();
+                            reject:
+                            {
+                                if (offer.contracts().size() != 1) {
+                                    break reject;
+                                }
+                                final var contract = offer.contracts().get(0);
+                                if (!contract.templateName().equalsIgnoreCase("simple-purchase.txt")) {
+                                    break reject;
+                                }
+                                final var arguments = contract.arguments();
+                                if (!offer.offerorName().equalsIgnoreCase(arguments.get("Buyer"))) {
+                                    break reject;
+                                }
+                                if (!offer.receiverName().equalsIgnoreCase(arguments.get("Seller"))) {
+                                    break reject;
+                                }
+                                if (!"XYZ-123".equalsIgnoreCase(arguments.get("ArticleNumber"))) {
+                                    break reject;
+                                }
+                                final long quantity;
+                                try {
+                                    quantity = Long.parseLong(arguments.get("Quantity"));
+                                }
+                                catch (final NumberFormatException ignored) {
+                                    break reject;
+                                }
+                                if (quantity <= 0 || quantity > 9000) {
+                                    break reject;
+                                }
+                                final long price;
+                                try {
+                                    price = Long.parseLong(arguments.get("Price"));
+                                }
+                                catch (final NumberFormatException ignored) {
+                                    break reject;
+                                }
+                                if (price / quantity < 860) {
+                                    break reject;
+                                }
+                                if (!"EUR".equalsIgnoreCase(arguments.get("Currency"))) {
+                                    break reject;
+                                }
+                                final Instant paymentDate;
+                                try {
+                                    paymentDate = Instant.parse(arguments.get("PaymentDate"));
+                                }
+                                catch (final DateTimeParseException ignored) {
+                                    break reject;
+                                }
+                                final var now = Instant.now();
+                                if (paymentDate.isBefore(now.plus(Duration.ofDays(15))) ||
+                                    paymentDate.isAfter(now.plus(Duration.ofDays(90))))
+                                {
+                                    break reject;
+                                }
+                                responder.accept()
+                                    .onFailure(fault ->
+                                        logger.error("Failed to accept offer in " + negotiation, fault));
+                                return;
+                            }
+                            responder.reject()
+                                .onFailure(fault ->
+                                    logger.error("Failed to reject offer in " + negotiation, fault));
+                        }
 
-                    // TODO: ...
+                        @Override
+                        public void onReject(final TrustedContractNegotiationDto negotiation) {
+                            throw new IllegalStateException();
+                        }
+                    });
                 })
 
                 .onFailure(Main::panic);
