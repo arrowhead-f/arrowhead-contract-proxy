@@ -23,7 +23,7 @@ public final class HttpJsonTrustedContractManagementProvider {
     public static ArService createFor(final ArSystem system, final ContractProxy proxy) {
         return new HttpService()
             .name("trusted-contract-management")
-            .basePath("/trusted-management")
+            .basePath("/trusted-contract-management")
             .encodings(EncodingDescriptor.JSON)
 
             // Only the "sysop" certificate is allowed access in secure mode.

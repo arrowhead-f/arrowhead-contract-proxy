@@ -21,7 +21,7 @@ public class HttpJsonTrustedContractObservationProvider {
     public static ArService createFor(final ArSystem system, final ContractProxy proxy) {
         return new HttpService()
             .name("trusted-contract-observation")
-            .basePath("/trusted-observation")
+            .basePath("/trusted-contract-observation")
             .encodings(EncodingDescriptor.JSON)
             .accessPolicy(system.isSecure() ? token() : unrestricted())
 

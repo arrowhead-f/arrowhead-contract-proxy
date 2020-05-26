@@ -36,7 +36,7 @@ services:
       - ./configuration/crypto/sysop.p12:/opt/keystore.p12
       - ./configuration/crypto/truststore.p12:/opt/truststore.p12
       - ./scripts/wait-for.sh:/opt/wait-for.sh
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-initiator.cp 9001 java -XX:+UseSerialGC -Xmx1G -Xms32m -jar cloud-configurator.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh authorization.cp 8445 && ./wait-for.sh orchestrator.cp 8441 && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar cloud-configurator.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.1.9
@@ -122,7 +122,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 9001:9001
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && /wait-for.sh contract-reactor.cp 9002 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.2.10
@@ -141,7 +141,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 8901:8901
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh authorization.cp 8445 && ./wait-for.sh orchestrator.cp 8441 && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh configurator.cp 9999 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.2.11
@@ -157,7 +157,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 9002:9002
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-reactor.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-reactor.cp 8902 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-reactor.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.3.10
@@ -176,7 +176,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 8902:8902
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh authorization.cp 8445 && ./wait-for.sh orchestrator.cp 8441 && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh configurator.cp 9999 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.3.11
