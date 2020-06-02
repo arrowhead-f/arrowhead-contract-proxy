@@ -6,7 +6,7 @@ import se.arkalix.core.cp.contract.ContractProxy;
 import se.arkalix.core.cp.contract.TrustedRenderedContractBuilder;
 import se.arkalix.core.cp.contract.TrustedTemplate;
 import se.arkalix.core.cp.util.UnsatisfiableRequestException;
-import se.arkalix.core.plugin.ErrorBuilder;
+import se.arkalix.core.plugin.ErrorResponseBuilder;
 import se.arkalix.descriptor.EncodingDescriptor;
 import se.arkalix.net.http.service.HttpService;
 
@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 
 import static se.arkalix.net.http.HttpStatus.NOT_FOUND;
 import static se.arkalix.net.http.HttpStatus.OK;
-import static se.arkalix.security.access.AccessPolicy.*;
+import static se.arkalix.security.access.AccessPolicy.unrestricted;
+import static se.arkalix.security.access.AccessPolicy.whitelist;
 import static se.arkalix.util.concurrent.Future.done;
 
 public final class HttpJsonTrustedContractManagementProvider {
@@ -58,7 +59,7 @@ public final class HttpJsonTrustedContractManagementProvider {
                 if (optionalNegotiation.isEmpty()) {
                     response
                         .status(NOT_FOUND)
-                        .body(new ErrorBuilder()
+                        .body(new ErrorResponseBuilder()
                             .code(NOT_FOUND.code())
                             .message("No negotiation with id " + id + " is " +
                                 "known to be or have been taking place " +

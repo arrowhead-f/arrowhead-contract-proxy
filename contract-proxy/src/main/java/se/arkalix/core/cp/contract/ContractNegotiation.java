@@ -33,6 +33,7 @@ public class ContractNegotiation {
     private int state = STATE_INITIAL;
 
     private Party activeParty = null;
+    private Party waitingParty = null;
 
     private final List<SignedContractOfferDto> loggedOffers = new ArrayList<>();
     private SignedContractAcceptanceDto loggedAcceptance = null;
@@ -75,7 +76,7 @@ public class ContractNegotiation {
         }
         final var lastOffer = lastOffer();
         return new TrustedContractOfferBuilder()
-            .offerorName((ownedParty == activeParty ? ownedParty : counterParty).commonName())
+            .offerorName(waitingParty.commonName())
             .receiverName(activeParty.commonName())
             .validAfter(lastOffer.validAfter())
             .validUntil(lastOffer.validUntil())
@@ -229,6 +230,7 @@ public class ContractNegotiation {
 
         loggedOffers.add(offer);
         activeParty = counterParty;
+        waitingParty = ownedParty;
         state = STATE_OFFERING;
     }
 
@@ -288,6 +290,7 @@ public class ContractNegotiation {
 
         loggedOffers.add(offer);
         activeParty = ownedParty;
+        waitingParty = counterParty;
         state = STATE_OFFERING;
     }
 

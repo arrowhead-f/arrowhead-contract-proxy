@@ -32,7 +32,7 @@ public final class Config {
 
     public static final SystemDetailsDto SYSTEM_CONTRACT_PROXY_INITIATOR = new SystemDetailsBuilder()
         .name("contract-proxy-initiator")
-        .hostname("127.23.2.11")
+        .hostname("172.23.2.11")
         .port(8901)
         .publicKeyBase64("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAie" +
             "+10W7i0nIkuaYFlAa/+y/EcEshTXEBJcrRe07GxEnhwPGt3gDyOE8H+ZF62" +
@@ -58,7 +58,7 @@ public final class Config {
 
     public static final SystemDetailsDto SYSTEM_CONTRACT_PROXY_REACTOR = new SystemDetailsBuilder()
         .name("contract-proxy-reactor")
-        .hostname("127.23.3.11")
+        .hostname("172.23.3.11")
         .port(8902)
         .publicKeyBase64("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkh" +
             "KqM2BwnF8JFLFNPLGC+I3IB6/9yfUXEf72xHoll5Uc90wyXyHD/xi49wrYz" +
@@ -145,11 +145,19 @@ public final class Config {
             .consumer("contract-proxy-initiator")
             .services("contract-negotiation")
             .providers("contract-proxy-reactor"),
+        new ServiceConsumptionRule()
+            .consumer("contract-proxy-initiator")
+            .services("event-publish")
+            .providers("event_handler"),
 
         new ServiceConsumptionRule()
             .consumer("contract-proxy-reactor")
             .services("contract-negotiation")
             .providers("contract-proxy-initiator"),
+        new ServiceConsumptionRule()
+            .consumer("contract-proxy-reactor")
+            .services("event-publish")
+            .providers("event_handler"),
 
         new ServiceConsumptionRule()
             .consumer("contract-reactor")

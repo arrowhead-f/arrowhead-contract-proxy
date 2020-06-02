@@ -10,8 +10,8 @@ import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
 
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -36,7 +36,7 @@ public class Main {
                 .trustStore(TrustStore.read("truststore.p12", password))
                 .localHostnamePort("172.23.2.10", 9001)
                 .plugins(
-                    HttpJsonCloudPlugin.viaServiceRegistryAt(new InetSocketAddress("172.23.1.12", 8443)),
+                    HttpJsonCloudPlugin.joinViaServiceRegistryAt(new InetSocketAddress("172.23.1.12", 8443)),
                     new HttpJsonTrustedContractNegotiatorPlugin())
                 .build();
 
@@ -61,20 +61,23 @@ public class Main {
                             "HttpJsonTrustedContractNegotiatorPlugin is " +
                             "available; cannot negotiate"));
 
-                    final var socket = new Socket();
-                    socket.connect(new InetSocketAddress("172.23.1.9", 9999));
-                    socket.close();
-
                     final var contract0 = new TrustedContractBuilder()
                         .templateName("simple-purchase.txt")
-                        .arguments(Map.of()) // TODO ...
+                        .arguments(Map.of(
+                            "Buyer", "Initiator System",
+                            "Seller", "Reactor System",
+                            "ArticleNumber", "XYZ-123",
+                            "Quantity", "200",
+                            "Price", "1290",
+                            "Currency", "EUR",
+                            "PaymentDate", Instant.now().plus(Duration.ofDays(60)).toString()))
                         .build();
 
-                    facade.offer("initiator", "reactor", Duration.ofHours(2), List.of(contract0),
+                    facade.offer("Initiator System", "Reactor System", Duration.ofHours(2), List.of(contract0),
                         new TrustedContractNegotiatorHandler() {
                             @Override
                             public void onAccept(final TrustedContractNegotiationDto negotiation) {
-                                // TODO ...
+                                logger.info("ACCEPTED " + negotiation.toString());
                             }
 
                             @Override
@@ -82,12 +85,16 @@ public class Main {
                                 final TrustedContractNegotiationDto negotiation,
                                 final TrustedContractNegotiatorResponder responder)
                             {
-                                // TODO ...
+                                logger.info("COUNTER-OFFER " + negotiation);
+                                logger.info("Rejecting counter-offer ...");
+                                responder.reject()
+                                    .ifSuccess(ignored -> logger.info("Counter-offer rejected"))
+                                    .onFailure(throwable -> logger.info("Failed to reject counter-offer", throwable));
                             }
 
                             @Override
                             public void onReject(final TrustedContractNegotiationDto negotiation) {
-                                // TODO ...
+                                logger.info("REJECTED " + negotiation.toString());
                             }
                         });
                 })
@@ -105,7 +112,7 @@ public class Main {
     }
 
     static {
-        final var logLevel = Level.INFO;
+        final var logLevel = Level.ALL;
         System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %5$s%6$s%n");
         final var root = java.util.logging.Logger.getLogger("");
         root.setLevel(logLevel);

@@ -57,4 +57,13 @@ public class ServiceConsumptionRule {
         providers = List.of(names);
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "ServiceConsumptionRule{" +
+            "consumer='" + consumer + '\'' +
+            ", services=" + services +
+            ", providers=" + providers +
+            '}';
+    }
 }

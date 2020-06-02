@@ -4,7 +4,7 @@ import se.arkalix.ArService;
 import se.arkalix.ArSystem;
 import se.arkalix.core.cp.contract.ContractProxy;
 import se.arkalix.core.cp.util.UnsatisfiableRequestException;
-import se.arkalix.core.plugin.ErrorBuilder;
+import se.arkalix.core.plugin.ErrorResponseBuilder;
 import se.arkalix.core.plugin.cp.TrustedContractNegotiationBuilder;
 import se.arkalix.descriptor.EncodingDescriptor;
 import se.arkalix.net.http.service.HttpService;
@@ -64,7 +64,7 @@ public class HttpJsonTrustedContractObservationProvider {
                 else {
                     response
                         .status(NOT_FOUND)
-                        .body(new ErrorBuilder()
+                        .body(new ErrorResponseBuilder()
                             .code(NOT_FOUND.code())
                             .message("No negotiation with id " + id + " is " +
                                 "known to be or have been taking place " +

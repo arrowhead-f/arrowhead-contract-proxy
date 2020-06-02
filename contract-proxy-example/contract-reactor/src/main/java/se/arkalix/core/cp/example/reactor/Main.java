@@ -35,7 +35,7 @@ public class Main {
                 .trustStore(TrustStore.read("truststore.p12", password))
                 .localHostnamePort("172.23.3.10", 9002)
                 .plugins(
-                    HttpJsonCloudPlugin.viaServiceRegistryAt(new InetSocketAddress("172.23.1.12", 8443)),
+                    HttpJsonCloudPlugin.joinViaServiceRegistryAt(new InetSocketAddress("172.23.1.12", 8443)),
                     new HttpJsonTrustedContractNegotiatorPlugin())
                 .build();
 
@@ -60,7 +60,7 @@ public class Main {
                             "HttpJsonTrustedContractNegotiatorPlugin is " +
                             "available; cannot negotiate"));
 
-                    facade.listen("reactor", () -> new TrustedContractNegotiatorHandler() {
+                    facade.listen("Reactor System", () -> new TrustedContractNegotiatorHandler() {
                         @Override
                         public void onAccept(final TrustedContractNegotiationDto negotiation) {
                             throw new IllegalStateException();
@@ -72,69 +72,96 @@ public class Main {
                             final TrustedContractNegotiatorResponder responder)
                         {
                             final var offer = negotiation.offer();
+                            var rejectReason = (String) null;
                             reject:
                             {
                                 if (offer.contracts().size() != 1) {
+                                    rejectReason = "Expected 1 contract";
                                     break reject;
                                 }
                                 final var contract = offer.contracts().get(0);
                                 if (!contract.templateName().equalsIgnoreCase("simple-purchase.txt")) {
+                                    rejectReason = "Expected contract to be named simple-purchase.txt";
                                     break reject;
                                 }
                                 final var arguments = contract.arguments();
                                 if (!offer.offerorName().equalsIgnoreCase(arguments.get("Buyer"))) {
+                                    rejectReason = "Expected Buyer to be \"" + offer.offerorName() + "\"";
                                     break reject;
                                 }
                                 if (!offer.receiverName().equalsIgnoreCase(arguments.get("Seller"))) {
+                                    rejectReason = "Expected Seller to be \"" + offer.receiverName() + "\"";
                                     break reject;
                                 }
                                 if (!"XYZ-123".equalsIgnoreCase(arguments.get("ArticleNumber"))) {
+                                    rejectReason = "Expected ArticleNumber to be \"XYZ-123\"";
                                     break reject;
                                 }
                                 final long quantity;
                                 try {
                                     quantity = Long.parseLong(arguments.get("Quantity"));
                                 }
-                                catch (final NumberFormatException ignored) {
+                                catch (final NumberFormatException exception) {
+                                    rejectReason = "Expected Quantity to be long integer (" + exception + ")";
                                     break reject;
                                 }
                                 if (quantity <= 0 || quantity > 9000) {
+                                    rejectReason = "Expected Quantity to be between 0 and 9000, inclusive";
                                     break reject;
                                 }
                                 final long price;
                                 try {
                                     price = Long.parseLong(arguments.get("Price"));
                                 }
-                                catch (final NumberFormatException ignored) {
+                                catch (final NumberFormatException exception) {
+                                    rejectReason = "Expected Price to be long integer (" + exception + ")";
                                     break reject;
                                 }
-                                if (price / quantity < 860) {
+                                if (price / quantity > 860) {
+                                    rejectReason = "Expected Price to be lower ...";
                                     break reject;
                                 }
                                 if (!"EUR".equalsIgnoreCase(arguments.get("Currency"))) {
+                                    rejectReason = "Expected Currency to be \"EUR\"";
                                     break reject;
                                 }
                                 final Instant paymentDate;
                                 try {
                                     paymentDate = Instant.parse(arguments.get("PaymentDate"));
                                 }
-                                catch (final DateTimeParseException ignored) {
+                                catch (final DateTimeParseException exception) {
+                                    rejectReason = "Expected PaymentDate to be " +
+                                        "valid ISO8601 string (" + exception + ")";
                                     break reject;
                                 }
                                 final var now = Instant.now();
                                 if (paymentDate.isBefore(now.plus(Duration.ofDays(15))) ||
                                     paymentDate.isAfter(now.plus(Duration.ofDays(90))))
                                 {
+                                    rejectReason = "Expected PaymentData to " +
+                                        "be within 15 and 90 days from now";
                                     break reject;
                                 }
                                 responder.accept()
-                                    .onFailure(fault ->
-                                        logger.error("Failed to accept offer in " + negotiation, fault));
+                                    .ifSuccess(ignored -> logger.info("Accepted {}", offer))
+                                    .onFailure(fault -> {
+                                        if (logger.isErrorEnabled()) {
+                                            logger.error("Failed to accept offer in " + negotiation, fault);
+                                        }
+                                    });
                                 return;
                             }
+                            if (logger.isWarnEnabled()) {
+                                logger.warn("Received offer issue: " + rejectReason +
+                                    "; rejecting offer in " + negotiation);
+                            }
                             responder.reject()
-                                .onFailure(fault ->
-                                    logger.error("Failed to reject offer in " + negotiation, fault));
+                                .ifSuccess(ignored -> logger.info("Rejected {}", offer))
+                                .onFailure(fault -> {
+                                    if (logger.isErrorEnabled()) {
+                                        logger.error("Failed to reject offer in " + negotiation, fault);
+                                    }
+                                });
                         }
 
                         @Override
@@ -152,12 +179,12 @@ public class Main {
     }
 
     private static void panic(final Throwable cause) {
-        logger.error("Failed to start contract initiator", cause);
+        logger.error("Failed to start contract reactor", cause);
         System.exit(1);
     }
 
     static {
-        final var logLevel = Level.INFO;
+        final var logLevel = Level.ALL;
         System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tF %1$tT %4$s %5$s%6$s%n");
         final var root = java.util.logging.Logger.getLogger("");
         root.setLevel(logLevel);

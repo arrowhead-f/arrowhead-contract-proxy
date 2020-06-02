@@ -72,7 +72,7 @@ services:
       - ./scripts/wait-for.sh:/orchestrator/wait-for.sh
     ports:
       - 8441:8441
-    command: ["/bin/bash", "-c", "cd /orchestrator && ./wait-for.sh service_registry.cp 8443 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-orchestrator.jar"]
+    command: ["/bin/bash", "-c", "cd /orchestrator && ./wait-for.sh authorization.cp 8445 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-orchestrator.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.1.11
@@ -106,7 +106,7 @@ services:
       - ./scripts/wait-for.sh:/eventhandler/wait-for.sh
     ports:
       - 8455:8455
-    command: ["/bin/bash", "-c", "cd /eventhandler && ./wait-for.sh service_registry.cp 8443 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-eventhandler.jar"]
+    command: ["/bin/bash", "-c", "cd /eventhandler && ./wait-for.sh orchestrator.cp 8441 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar arrowhead-eventhandler.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.1.13
@@ -122,7 +122,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 9001:9001
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && /wait-for.sh contract-reactor.cp 9002 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && ./wait-for.sh contract-reactor.cp 9002 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.2.10

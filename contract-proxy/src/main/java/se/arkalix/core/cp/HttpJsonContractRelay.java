@@ -1,5 +1,7 @@
 package se.arkalix.core.cp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.arkalix.ArSystem;
 import se.arkalix.core.cp.contract.*;
 import se.arkalix.core.plugin.cp.ContractNegotiationStatus;

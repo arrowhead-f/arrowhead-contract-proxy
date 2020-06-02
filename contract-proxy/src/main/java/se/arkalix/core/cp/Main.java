@@ -13,7 +13,6 @@ import se.arkalix.core.cp.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
 import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
-import se.arkalix.util.concurrent.Futures;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -254,7 +253,7 @@ public class Main {
             .serviceCache(properties.getDuration("kalix.service-cache.entry-lifetime")
                 .map(ArServiceCache::withEntryLifetimeLimit)
                 .orElseGet(ArServiceCache::withDefaultEntryLifetimeLimit))
-            .plugins(HttpJsonCloudPlugin.viaServiceRegistryAt(serviceRegistrySocketAddress))
+            .plugins(HttpJsonCloudPlugin.joinViaServiceRegistryAt(serviceRegistrySocketAddress))
             .build();
     }
 }

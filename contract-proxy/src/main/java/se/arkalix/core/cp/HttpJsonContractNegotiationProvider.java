@@ -7,7 +7,7 @@ import se.arkalix.core.cp.contract.SignedContractAcceptanceDto;
 import se.arkalix.core.cp.contract.SignedContractOfferDto;
 import se.arkalix.core.cp.contract.SignedContractRejectionDto;
 import se.arkalix.core.cp.util.UnsatisfiableRequestException;
-import se.arkalix.core.plugin.ErrorBuilder;
+import se.arkalix.core.plugin.ErrorResponseBuilder;
 import se.arkalix.descriptor.EncodingDescriptor;
 import se.arkalix.net.http.service.HttpService;
 
@@ -59,7 +59,7 @@ public class HttpJsonContractNegotiationProvider {
             .catcher(UnsatisfiableRequestException.class, (exception, request, response) -> {
                 response
                     .status(BAD_REQUEST)
-                    .body(new ErrorBuilder()
+                    .body(new ErrorResponseBuilder()
                         .code(BAD_REQUEST.code())
                         .message(exception.getMessage())
                         .type(exception.type())

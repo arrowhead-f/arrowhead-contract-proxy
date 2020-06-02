@@ -66,12 +66,16 @@ public class Main {
                         }
                     }
                 })
-                .onFailure(Throwable::printStackTrace);
+                .onFailure(Main::panic);
         }
         catch (final Throwable e) {
-            e.printStackTrace();
-            System.exit(1);
+            panic(e);
         }
+    }
+
+    private static void panic(final Throwable cause) {
+        logger.error("Configuration failed", cause);
+        System.exit(1);
     }
 
 

@@ -1,5 +1,7 @@
 package se.arkalix.core.cp.example.configurator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.arkalix.net.http.client.HttpClient;
 import se.arkalix.net.http.client.HttpClientRequest;
 import se.arkalix.net.http.client.HttpClientResponse;
@@ -14,6 +16,8 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 import static se.arkalix.net.http.HttpMethod.POST;
 
 public class Authorizer {
+    private static final Logger logger = LoggerFactory.getLogger(Authorizer.class);
+
     private final HttpClient client;
     private final Registry registry;
 
@@ -42,6 +46,9 @@ public class Authorizer {
                     .map(registry::getSystemIdOrThrow)
                     .collect(Collectors.toList()))
                 .build()))
-            .flatMap(HttpClientResponse::rejectIfNotSuccess);
+            .flatMap(HttpClientResponse::rejectIfNotSuccess)
+            .ifSuccess(ignored -> logger.info("Created authorization rule from {}", rule))
+            .ifFailure(Throwable.class, throwable ->
+                logger.warn("Failed to create authorization rule from " + rule, throwable));
     }
 }

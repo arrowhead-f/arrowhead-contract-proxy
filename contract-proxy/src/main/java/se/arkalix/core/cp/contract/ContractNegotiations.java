@@ -30,7 +30,7 @@ public class ContractNegotiations {
         ContractNegotiation existingNegotiation;
         do {
             do {
-                id = random.nextLong();
+                id = Math.abs(random.nextLong());
             } while (pairNegotiations.containsKey(id) && attempts-- != 0);
 
             if (attempts < 0) {

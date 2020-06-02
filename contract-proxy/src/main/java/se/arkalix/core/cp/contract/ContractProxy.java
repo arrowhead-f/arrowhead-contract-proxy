@@ -117,7 +117,7 @@ public class ContractProxy {
             });
     }
 
-    public Future<?> update(final TrustedContractOffer offer) {
+    public Future<Long> update(final TrustedContractOffer offer) {
         Objects.requireNonNull(offer, "Expected offer");
 
         final var offeror = getOwnedPartyByCommonNameOrThrow(offer.offerorName());
@@ -133,12 +133,13 @@ public class ContractProxy {
         }
 
         final var signedOffer = negotiation.prepareOnBehalfOfOwnedParty(offer);
-        return relay.sendToCounterParty(signedOffer, offeror)
+        return relay.sendToCounterParty(signedOffer, receiver)
             .ifSuccess(ignored -> {
                 negotiation.updateOnBehalfOfOwnedParty(signedOffer);
                 relay.sendToEventHandler(negotiation.id(), negotiation.lastOfferAsTrusted(), OFFERING)
                     .onFailure(fault -> logger.warn("Failed to send " + offer + " to event handler", fault));
-            });
+            })
+            .pass(negotiation.id());
     }
 
     public Future<?> update(final TrustedContractRejectionDto rejection) {
