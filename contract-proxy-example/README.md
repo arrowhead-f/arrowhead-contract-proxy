@@ -2,6 +2,7 @@
 
 This folder contains two custom systems, the [Contract Initiator](contract-initiator) and the [Contract Reactor](contract-reactor).
 These two systems, conceptually owned and controlled by two different parties, help illustrate how an Arrowhead Contract Proxy system could be used to assist two parties in offering and entering into agreements that are legally binding, given that the used certificates, private keys and signed documents are handled according to whatever criteria are set by any legal institutions of relevance.
+When running the demo, as instructed below, the [Contract Initiator](contract-initiator) sends a signed offer to enter into a contract to buy a certain number of units, as outlined by the contract template [simple-purchase.txt](configuration/contract-templates/simple-purchase.txt) to the [Contract Reactor](contract-reactor), which evaluates the offer and then sends a signed acceptance back to the initiator. 
 Please refer to their source code for more details about how to use the Contract Proxy system.
 
 ## Building and Running

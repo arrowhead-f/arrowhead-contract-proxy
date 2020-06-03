@@ -7,7 +7,7 @@ cd "$(dirname "$0")" || exit
 cd .. && mvn clean package
 
 # Move back to this directory.
-cd "$(dirname "$0")" || exit
+cd contract-proxy-example
 
 # Bring up docker cluster.
 docker-compose up --build
