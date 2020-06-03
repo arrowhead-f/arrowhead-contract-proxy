@@ -55,7 +55,10 @@ public class Orchestrator {
                     }))
                 .collect(Collectors.toList())))
             .flatMap(HttpBodyReceiver::bodyAsString)
-            .ifSuccess(body -> logger.info("Created orchestration rules; response: {}", body))
+            .ifSuccess(body -> {
+                logger.info("Created orchestration rules");
+                logger.debug("Response: {}", body);
+            })
             .ifFailure(Throwable.class, throwable ->
                 logger.warn("Failed to create orchestration rules from " + Arrays.toString(rules), throwable));
     }

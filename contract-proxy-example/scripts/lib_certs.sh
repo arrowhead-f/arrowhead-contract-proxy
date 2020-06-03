@@ -85,6 +85,7 @@ create_cloud_keystore() {
     keytool -genkeypair -v \
       -keystore "${CLOUD_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -keyalg "RSA" \
       -keysize "2048" \
       -validity "3650" \
@@ -96,6 +97,7 @@ create_cloud_keystore() {
     keytool -importcert -v \
       -keystore "${CLOUD_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${ROOT_KEY_ALIAS}" \
       -file "${ROOT_CERT_FILE}" \
       -trustcacerts \
@@ -104,11 +106,13 @@ create_cloud_keystore() {
     keytool -certreq -v \
       -keystore "${CLOUD_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${CLOUD_KEY_ALIAS}" \
       -keypass:env "PASSWORD" |
       keytool -gencert -v \
         -keystore "${ROOT_KEYSTORE}" \
         -storepass:env "PASSWORD" \
+        -storetype "PKCS12" \
         -validity "3650" \
         -alias "${ROOT_KEY_ALIAS}" \
         -keypass:env "PASSWORD" \
@@ -117,6 +121,7 @@ create_cloud_keystore() {
       keytool -importcert \
         -keystore "${CLOUD_KEYSTORE}" \
         -storepass:env "PASSWORD" \
+        -storetype "PKCS12" \
         -alias "${CLOUD_KEY_ALIAS}" \
         -keypass:env "PASSWORD" \
         -trustcacerts \
@@ -129,6 +134,7 @@ create_cloud_keystore() {
     keytool -exportcert -v \
       -keystore "${CLOUD_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${CLOUD_KEY_ALIAS}" \
       -keypass:env "PASSWORD" \
       -file "${CLOUD_CERT_FILE}" \
@@ -175,6 +181,7 @@ create_system_keystore() {
     keytool -genkeypair -v \
       -keystore "${SYSTEM_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -keyalg "RSA" \
       -keysize "2048" \
       -validity "3650" \
@@ -186,6 +193,7 @@ create_system_keystore() {
     keytool -importcert -v \
       -keystore "${SYSTEM_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${ROOT_KEY_ALIAS}" \
       -file "${ROOT_CERT_FILE}" \
       -trustcacerts \
@@ -194,6 +202,7 @@ create_system_keystore() {
     keytool -importcert -v \
       -keystore "${SYSTEM_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${CLOUD_KEY_ALIAS}" \
       -file "${CLOUD_CERT_FILE}" \
       -trustcacerts \
@@ -202,11 +211,13 @@ create_system_keystore() {
     keytool -certreq -v \
       -keystore "${SYSTEM_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${SYSTEM_KEY_ALIAS}" \
       -keypass:env "PASSWORD" |
       keytool -gencert -v \
         -keystore "${CLOUD_KEYSTORE}" \
         -storepass:env "PASSWORD" \
+        -storetype "PKCS12" \
         -validity "3650" \
         -alias "${CLOUD_KEY_ALIAS}" \
         -keypass:env "PASSWORD" \
@@ -215,6 +226,7 @@ create_system_keystore() {
       keytool -importcert \
         -keystore "${SYSTEM_KEYSTORE}" \
         -storepass:env "PASSWORD" \
+        -storetype "PKCS12" \
         -alias "${SYSTEM_KEY_ALIAS}" \
         -keypass:env "PASSWORD" \
         -trustcacerts \
@@ -227,6 +239,7 @@ create_system_keystore() {
     keytool -list \
       -keystore "${SYSTEM_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${SYSTEM_KEY_ALIAS}" \
       -rfc |
       openssl x509 \
@@ -297,6 +310,7 @@ create_sysop_keystore() {
     keytool -exportcert -v \
       -keystore "${SYSOP_KEYSTORE}" \
       -storepass:env "PASSWORD" \
+      -storetype "PKCS12" \
       -alias "${SYSOP_KEY_ALIAS}" \
       -keypass:env "PASSWORD" \
       -rfc >>"${SYSOP_CERT_FILE}"
@@ -345,6 +359,7 @@ create_truststore() {
       keytool -importcert -v \
         -keystore "${TRUSTSTORE}" \
         -storepass:env "PASSWORD" \
+        -storetype "PKCS12" \
         -file "${ARGV[j]}" \
         -alias "${ARGV[j + 1]}" \
         -trustcacerts \

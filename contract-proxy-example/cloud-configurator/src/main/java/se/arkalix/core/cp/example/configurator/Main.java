@@ -16,6 +16,18 @@ import java.util.logging.Level;
 import static se.arkalix.dto.DtoEncoding.JSON;
 import static se.arkalix.net.http.HttpMethod.POST;
 
+/**
+ * This system exists solely for the purpose of registering all non-mandatory
+ * core services and other services, as well as creating authorization and
+ * orchestration rules for those services. When done, it starts to accept
+ * incoming connections via port 9999, which allows other systems to wait for
+ * it to complete by using the `wait-for.sh` script.
+ *
+ * As this system uses the management services provided by the service registry,
+ * authorization system and orchestrator, it must use a so-called "sysop"
+ * (System Operator) certificate. The particulars of this procedure are likely
+ * to change with future versions of Eclipse Arrowhead.
+ */
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -41,7 +53,7 @@ public class Main {
                     .uri("/serviceregistry/mgmt")
                     .body(JSON, service))
                     .flatMap(HttpBodyReceiver::bodyAsString)
-                    .ifSuccess(logger::info)
+                    .ifSuccess(logger::debug)
                     .ifFailure(Throwable.class, fault -> logger.error("Failed to register service", fault))))
                 .flatMap(ignored -> registry.refresh())
                 .flatMap(ignored -> authorizer.authorize(Config.RULES))

@@ -1,7 +1,5 @@
 package se.arkalix.core.cp;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import se.arkalix.ArSystem;
 import se.arkalix.core.cp.contract.*;
 import se.arkalix.core.plugin.cp.ContractNegotiationStatus;
@@ -39,7 +37,7 @@ public class HttpJsonContractRelay implements ContractRelay {
             "offeror", offer.offerorName(),
             "receiver", offer.receiverName(),
             "templates", offer.contracts().stream().map(TrustedContract::templateName).collect(Collectors.joining(",")),
-            "status", status.toString().toLowerCase());
+            "status", status.toString());
         return system.consume()
             .using(HttpJsonEventPublishService.factory())
             .flatMap(service -> service.publish(TOPIC_UPDATE, system, metadata, Long.toString(negotiationId)));

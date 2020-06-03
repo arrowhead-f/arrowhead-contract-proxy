@@ -16,18 +16,18 @@ services:
       clouds:
         ipv4_address: 172.23.1.5
 
-  management_tool.cp:
-    container_name: management_tool.cp
-    image: management-tool
-    environment:
-      - ARROWHEAD_AUTH_URL=https://172.23.1.10:8445
-      - ARROWHEAD_ORCH_URL=https://172.23.1.11:8441
-      - ARROWHEAD_SR_URL=https://172.23.1.12:8443
-    ports:
-      - 80:80
-    networks:
-      clouds:
-        ipv4_address: 172.23.1.6
+#  management_tool.cp:
+#    container_name: management_tool.cp
+#    image: svetlint/management-tool:latest
+#    environment:
+#      - ARROWHEAD_AUTH_URL=https://172.23.1.10:8445
+#      - ARROWHEAD_ORCH_URL=https://172.23.1.11:8441
+#      - ARROWHEAD_SR_URL=https://172.23.1.12:8443
+#    ports:
+#      - 5000:5000
+#    networks:
+#      clouds:
+#        ipv4_address: 172.23.1.6
 
   configurator.cp:
     container_name: configurator.cp
@@ -36,7 +36,7 @@ services:
       - ./configuration/crypto/sysop.p12:/opt/keystore.p12
       - ./configuration/crypto/truststore.p12:/opt/truststore.p12
       - ./scripts/wait-for.sh:/opt/wait-for.sh
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh authorization.cp 8445 && ./wait-for.sh orchestrator.cp 8441 && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar cloud-configurator.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh event_handler.cp 8455 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar cloud-configurator.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.1.9
@@ -45,7 +45,7 @@ services:
 
   authorization.cp:
     container_name: authorization.cp
-    image: svetlint/authorization:latest
+    image: svetlint/authorization:4.1.3
     depends_on:
       - mysql.cp
     volumes:
@@ -62,7 +62,7 @@ services:
 
   orchestrator.cp:
     container_name: orchestrator.cp
-    image: svetlint/orchestrator:latest
+    image: svetlint/orchestrator:4.1.3
     depends_on:
       - mysql.cp
     volumes:
@@ -79,7 +79,7 @@ services:
 
   service_registry.cp:
     container_name: service_registry.cp
-    image: svetlint/serviceregistry:latest
+    image: svetlint/serviceregistry:4.1.3
     depends_on:
       - mysql.cp
     volumes:
@@ -96,7 +96,7 @@ services:
 
   event_handler.cp:
     container_name: event_handler.cp
-    image: svetlint/eventhandler:latest
+    image: svetlint/eventhandler:4.1.3
     depends_on:
       - mysql.cp
     volumes:
@@ -122,7 +122,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 9001:9001
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && ./wait-for.sh contract-reactor.cp 9002 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-reactor.cp 9002 && java -XX:+UseSerialGC -Xmx1G -Xms32m -jar contract-initiator.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.2.10
@@ -176,7 +176,7 @@ services:
       - ./scripts/wait-for.sh:/opt/wait-for.sh
     ports:
       - 8902:8902
-    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh configurator.cp 9999 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
+    command: ["/bin/bash", "-c", "cd /opt && ./wait-for.sh contract-proxy-initiator.cp 8901 && java -XX:+UseSerialGC -Xmx1G -Xms32m -Djava.util.logging.config.file=/opt/application.properties -jar arrowhead-contract-proxy.jar"]
     networks:
       clouds:
         ipv4_address: 172.23.3.11
