@@ -2,7 +2,7 @@ package se.arkalix.core.cp;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.arkalix.ArServiceCache;
+import se.arkalix.ArServiceDescriptionCache;
 import se.arkalix.ArSystem;
 import se.arkalix.core.cp.contract.ContractProxy;
 import se.arkalix.core.cp.contract.OwnedParty;
@@ -77,7 +77,7 @@ public class Main {
                 .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
                 .onFailure(Main::panic);
 
-            logger.info("Contract proxy system about to be served via: {}", system.localSocketAddress());
+            logger.info("Contract proxy system about to be served via: {}", system.socketAddress());
         }
         catch (final Throwable throwable) {
             panic(throwable);
@@ -251,8 +251,8 @@ public class Main {
                 })
                 .orElse(null))
             .serviceCache(properties.getDuration("kalix.service-cache.entry-lifetime")
-                .map(ArServiceCache::withEntryLifetimeLimit)
-                .orElseGet(ArServiceCache::withDefaultEntryLifetimeLimit))
+                .map(ArServiceDescriptionCache::withEntryLifetimeLimit)
+                .orElseGet(ArServiceDescriptionCache::withDefaultEntryLifetimeLimit))
             .plugins(HttpJsonCloudPlugin.joinViaServiceRegistryAt(serviceRegistrySocketAddress))
             .build();
     }

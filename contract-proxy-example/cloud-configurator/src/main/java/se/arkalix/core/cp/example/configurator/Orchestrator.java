@@ -2,10 +2,9 @@ package se.arkalix.core.cp.example.configurator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.arkalix.net.http.HttpBodyReceiver;
+import se.arkalix.net.MessageIncoming;
 import se.arkalix.net.http.client.HttpClient;
 import se.arkalix.net.http.client.HttpClientRequest;
-import se.arkalix.net.http.client.HttpClientResponse;
 import se.arkalix.util.concurrent.Future;
 
 import java.util.Arrays;
@@ -54,7 +53,7 @@ public class Orchestrator {
                                 .build());
                     }))
                 .collect(Collectors.toList())))
-            .flatMap(HttpBodyReceiver::bodyAsString)
+            .flatMap(MessageIncoming::bodyAsString)
             .ifSuccess(body -> {
                 logger.info("Created orchestration rules");
                 logger.debug("Response: {}", body);

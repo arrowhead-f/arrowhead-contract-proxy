@@ -71,8 +71,8 @@ public class Main {
                     @Override
                     public void onOffer(
                         final TrustedContractNegotiationDto negotiation,
-                        final TrustedContractNegotiatorResponder responder)
-                    {
+                        final TrustedContractNegotiatorResponder responder
+                    ) {
                         logger.info("== DEMO == Received " + negotiation);
                         logger.info("== DEMO == Rejecting counter-offer ...");
                         responder.reject()
@@ -84,7 +84,8 @@ public class Main {
                     public void onReject(final TrustedContractNegotiationDto negotiation) {
                         logger.info("== DEMO == Offer rejected by counter-party " + negotiation);
                     }
-                });
+                })
+                .onFailure(throwable -> logger.warn("Failed to make contract offer", throwable));
         }
         catch (final Throwable throwable) {
             panic(throwable);

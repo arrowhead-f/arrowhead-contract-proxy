@@ -2,7 +2,7 @@ package se.arkalix.core.cp.example.configurator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.arkalix.net.http.HttpBodyReceiver;
+import se.arkalix.net.MessageIncoming;
 import se.arkalix.net.http.client.HttpClient;
 import se.arkalix.net.http.client.HttpClientRequest;
 import se.arkalix.security.identity.OwnedIdentity;
@@ -52,7 +52,7 @@ public class Main {
                     .method(POST)
                     .uri("/serviceregistry/mgmt")
                     .body(JSON, service))
-                    .flatMap(HttpBodyReceiver::bodyAsString)
+                    .flatMap(MessageIncoming::bodyAsString)
                     .ifSuccess(logger::debug)
                     .ifFailure(Throwable.class, fault -> logger.error("Failed to register service", fault))))
                 .flatMap(ignored -> registry.refresh())

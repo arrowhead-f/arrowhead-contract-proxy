@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Template {
-    private static final Pattern PATTERN = Pattern.compile("\\{([\\w]+)}");
+    private static final Pattern PATTERN = Pattern.compile("\\{([\\w_-]+)}");
 
     private final String name;
     private final String text;

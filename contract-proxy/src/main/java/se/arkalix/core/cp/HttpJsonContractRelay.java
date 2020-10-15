@@ -39,7 +39,7 @@ public class HttpJsonContractRelay implements ContractRelay {
             "templates", offer.contracts().stream().map(TrustedContract::templateName).collect(Collectors.joining(",")),
             "status", status.toString());
         return system.consume()
-            .using(HttpJsonEventPublishService.factory())
+            .oneUsing(HttpJsonEventPublishService.factory())
             .flatMap(service -> service.publish(TOPIC_UPDATE, system, metadata, Long.toString(negotiationId)));
     }
 
@@ -52,7 +52,7 @@ public class HttpJsonContractRelay implements ContractRelay {
             // One party per system and use of unreliable identifier. Certificate registry instead of SR?
             .metadata(Map.of("party", counterParty.commonName()))
 
-            .using(HttpConsumer.factory())
+            .oneUsing(HttpConsumer.factory())
             .flatMap(consumer -> consumer.send(new HttpConsumerRequest()
                 .method(POST)
                 .uri(Paths.combine(consumer.service().uri(), "acceptances"))
@@ -69,7 +69,7 @@ public class HttpJsonContractRelay implements ContractRelay {
             // One party per system and use of unreliable identifier. Certificate registry instead of SR?
             .metadata(Map.of("party", counterParty.commonName()))
 
-            .using(HttpConsumer.factory())
+            .oneUsing(HttpConsumer.factory())
             .flatMap(consumer -> consumer.send(new HttpConsumerRequest()
                 .method(POST)
                 .uri(Paths.combine(consumer.service().uri(), "offers"))
@@ -86,7 +86,7 @@ public class HttpJsonContractRelay implements ContractRelay {
             // One party per system and use of unreliable identifier. Certificate registry instead of SR?
             .metadata(Map.of("party", counterParty.commonName()))
 
-            .using(HttpConsumer.factory())
+            .oneUsing(HttpConsumer.factory())
             .flatMap(consumer -> consumer.send(new HttpConsumerRequest()
                 .method(POST)
                 .uri(Paths.combine(consumer.service().uri(), "rejections"))

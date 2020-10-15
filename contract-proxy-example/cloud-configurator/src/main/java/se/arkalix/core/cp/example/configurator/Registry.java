@@ -57,7 +57,7 @@ public class Registry {
 
     public Future<?> refresh() {
         return client.send(Config.SR, new HttpClientRequest().method(GET).uri("/serviceregistry/mgmt"))
-            .flatMap(response -> response.bodyAsClassIfSuccess(JSON, SrMgtQueryResultDto.class))
+            .flatMap(response -> response.bodyAsIfSuccess(JSON, SrMgtQueryResultDto.class))
             .ifSuccess(result -> result.data().forEach(entry -> {
                 final var sd = entry.serviceDefinition();
                 serviceNameToId.put(sd.serviceDefinition(), sd.id());
