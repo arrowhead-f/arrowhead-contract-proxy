@@ -69,11 +69,27 @@ public class ContractNegotiation {
         return id;
     }
 
-    public synchronized TrustedContractOfferDto lastOfferAsTrusted() {
+    public synchronized Optional<SignedContractAcceptanceDto> acceptance() {
+        return Optional.ofNullable(loggedAcceptance);
+    }
+
+    public synchronized Optional<SignedContractRejectionDto> rejection() {
+        return Optional.ofNullable(loggedRejection);
+    }
+
+    public synchronized List<SignedContractOfferDto> offers() {
+        return List.copyOf(loggedOffers);
+    }
+
+    public synchronized SignedContractOfferDto lastOffer() {
         if (state == STATE_INITIAL) {
             throw new IllegalStateException("This negotiation session does " +
                 "not contain any offers; cannot fulfill request");
         }
+        return loggedOffers.get(loggedOffers.size() - 1);
+    }
+
+    public synchronized TrustedContractOfferDto lastOfferAsTrusted() {
         final var lastOffer = lastOffer();
         return new TrustedContractOfferBuilder()
             .offerorName(waitingParty.commonName())
@@ -98,10 +114,6 @@ public class ContractNegotiation {
     }
 
     public synchronized List<Contract> lastOfferContracts() {
-        if (state == STATE_INITIAL) {
-            throw new IllegalStateException("This negotiation session does " +
-                "not contain any offers; cannot fulfill request");
-        }
         return lastOffer()
             .contracts()
             .stream()
@@ -307,11 +319,6 @@ public class ContractNegotiation {
 
         loggedRejection = rejection;
         state = STATE_REJECTED;
-    }
-
-    private SignedContractOfferDto lastOffer() {
-        assert loggedOffers.size() > 0;
-        return loggedOffers.get(loggedOffers.size() - 1);
     }
 
     private void throwIfNotCloseTo(final Instant timestamp, final Instant now) {

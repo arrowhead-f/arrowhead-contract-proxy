@@ -3,11 +3,11 @@ package se.arkalix.core.cp;
 import se.arkalix.ArService;
 import se.arkalix.ArSystem;
 import se.arkalix.core.cp.contract.ContractProxy;
+import se.arkalix.core.cp.util.HttpServices;
 import se.arkalix.core.cp.util.UnsatisfiableRequestException;
 import se.arkalix.core.plugin.ErrorResponseBuilder;
 import se.arkalix.core.plugin.cp.TrustedContractNegotiationBuilder;
 import se.arkalix.descriptor.EncodingDescriptor;
-import se.arkalix.net.http.service.HttpService;
 
 import static se.arkalix.net.http.HttpStatus.NOT_FOUND;
 import static se.arkalix.net.http.HttpStatus.OK;
@@ -19,7 +19,7 @@ public class HttpJsonTrustedContractObservationProvider {
     private HttpJsonTrustedContractObservationProvider() {}
 
     public static ArService createFor(final ArSystem system, final ContractProxy proxy) {
-        return new HttpService()
+        return HttpServices.newWithUnsatisfiableRequestCatcher()
             .name("trusted-contract-observation")
             .basePath("/trusted-contract-observation")
             .encodings(EncodingDescriptor.JSON)

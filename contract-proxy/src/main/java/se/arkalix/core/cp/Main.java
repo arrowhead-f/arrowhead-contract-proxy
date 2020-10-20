@@ -3,6 +3,7 @@ package se.arkalix.core.cp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.arkalix.ArServiceDescriptionCache;
+import se.arkalix.ArServiceHandle;
 import se.arkalix.ArSystem;
 import se.arkalix.core.cp.contract.ContractProxy;
 import se.arkalix.core.cp.contract.OwnedParty;
@@ -13,6 +14,7 @@ import se.arkalix.core.cp.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
 import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
+import se.arkalix.util.function.ThrowingConsumer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -36,7 +38,7 @@ public class Main {
         final String args0;
         switch (args.length) {
         case 0:
-            args0 = "./application.properties";
+            args0 = "application.properties";
             break;
         case 1:
             args0 = args[0];
@@ -62,26 +64,34 @@ public class Main {
             final var proxy = createContractProxy(system, properties);
 
             system.provide(HttpJsonContractNegotiationProvider.createFor(system, proxy))
-                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .ifSuccess(logIsProvidingService())
+                .onFailure(Main::panic);
+
+            system.provide(HttpJsonContractSharingProvider.createFor(system, proxy))
+                .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 
             system.provide(HttpJsonTrustedContractNegotiationProvider.createFor(system, proxy))
-                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 
             system.provide(HttpJsonTrustedContractObservationProvider.createFor(system, proxy))
-                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+                .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 
-            system.provide(HttpJsonTrustedContractManagementProvider.createFor(system, proxy))
-                .ifSuccess(handle -> logger.info("Providing service \"" + handle.description().name() + "\" ..."))
+            system.provide(HttpJsonTrustedContractSharingProvider.createFor(system, proxy))
+                .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 
-            logger.info("Contract proxy system about to be served via: {}", system.socketAddress());
+            logger.info("About to provide services via: {}", system.socketAddress());
         }
         catch (final Throwable throwable) {
             panic(throwable);
         }
+    }
+
+    private static ThrowingConsumer<ArServiceHandle> logIsProvidingService() {
+        return handle -> logger.info("Providing service \"" + handle.description().name() + "\" ...");
     }
 
     private static void panic(final Throwable cause) {

@@ -43,6 +43,10 @@ public class Parties {
         this.ownedParties = Collections.unmodifiableList(ownedParties);
     }
 
+    public Collection<Party> getAllParties() {
+        return commonNameToParty.values();
+    }
+
     public List<OwnedParty> getAllOwnedParties() {
         return ownedParties;
     }
