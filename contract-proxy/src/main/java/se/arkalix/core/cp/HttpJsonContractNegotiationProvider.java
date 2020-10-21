@@ -8,20 +8,18 @@ import se.arkalix.core.cp.contract.SignedContractAcceptanceDto;
 import se.arkalix.core.cp.contract.SignedContractOfferDto;
 import se.arkalix.core.cp.contract.SignedContractRejectionDto;
 import se.arkalix.core.cp.security.Hash;
-import se.arkalix.core.cp.security.HashAlgorithm;
 import se.arkalix.core.cp.util.HttpServices;
 import se.arkalix.core.cp.util.UnsatisfiableRequestException;
 import se.arkalix.descriptor.EncodingDescriptor;
-import se.arkalix.net.http.service.HttpServiceRequestException;
-import se.arkalix.util.concurrent.Futures;
 
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static se.arkalix.net.http.HttpStatus.*;
+import static se.arkalix.descriptor.EncodingDescriptor.JSON;
+import static se.arkalix.net.http.HttpStatus.NO_CONTENT;
+import static se.arkalix.net.http.HttpStatus.OK;
 import static se.arkalix.security.access.AccessPolicy.token;
 import static se.arkalix.security.access.AccessPolicy.unrestricted;
 import static se.arkalix.util.concurrent.Future.done;
@@ -33,7 +31,7 @@ public class HttpJsonContractNegotiationProvider {
         return HttpServices.newWithUnsatisfiableRequestCatcher()
             .name("contract-negotiation")
             .basePath("/contract-negotiation")
-            .encodings(EncodingDescriptor.JSON)
+            .encodings(JSON)
             .accessPolicy(system.isSecure() ? token() : unrestricted())
 
             // This is only advertising one party. TODO: Figure out way to advertise all owned parties.

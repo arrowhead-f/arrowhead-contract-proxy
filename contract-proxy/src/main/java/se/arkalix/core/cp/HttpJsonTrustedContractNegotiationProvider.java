@@ -2,7 +2,7 @@ package se.arkalix.core.cp;
 
 import se.arkalix.ArService;
 import se.arkalix.ArSystem;
-import se.arkalix.core.cp.bank.DefinitionMessage;
+import se.arkalix.core.cp.bank.DefinitionEntry;
 import se.arkalix.core.cp.contract.ContractProxy;
 import se.arkalix.core.cp.util.HttpServices;
 import se.arkalix.core.cp.util.UnsatisfiableRequestException;
@@ -74,7 +74,7 @@ public class HttpJsonTrustedContractNegotiationProvider {
                         .map(String::trim))
                     .map(Long::parseUnsignedLong)
                     .flatMap(id -> proxy.bank().get(id).stream())
-                    .map(DefinitionMessage::from)
+                    .map(DefinitionEntry::toMessage)
                     .collect(Collectors.toUnmodifiableList());
 
                 response.status(OK)

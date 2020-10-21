@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DefinitionBank {
     private final Map<Hash, Definition> hashToDefinition = new ConcurrentHashMap<>();
-    private final Map<Long, List<Definition>> negotiationIdToDefinitions = new ConcurrentHashMap<>();
+    private final Map<Long, List<DefinitionEntry>> negotiationIdToDefinitions = new ConcurrentHashMap<>();
     private final Set<HashAlgorithm> acceptedHashAlgorithms;
 
     public DefinitionBank(final Set<HashAlgorithm> acceptedHashAlgorithms) {
@@ -22,6 +22,7 @@ public class DefinitionBank {
         Objects.requireNonNull(definition, "Expected definition");
 
         final var hashes = definition.hashUsing(acceptedHashAlgorithms);
+
         int i0 = 0, i1 = hashes.size();
         while (i0 < i1) {
             final var hash = hashes.get(i0);
@@ -41,7 +42,7 @@ public class DefinitionBank {
             if (definitions == null) {
                 definitions = new CopyOnWriteArrayList<>();
             }
-            definitions.add(definition);
+            definitions.add(new DefinitionEntry(hashes, definition));
             return definitions;
         });
     }
@@ -61,11 +62,12 @@ public class DefinitionBank {
     }
 
     @ThreadSafe
-    public Collection<Definition> get(final long negotiationId) {
+    public Collection<DefinitionEntry> get(final long negotiationId) {
         final var definitions = negotiationIdToDefinitions.get(negotiationId);
         if (definitions == null) {
             return Collections.emptyList();
         }
         return List.copyOf(definitions);
     }
+
 }

@@ -1,10 +1,12 @@
 package se.arkalix.core.cp.bank;
 
 import se.arkalix.core.cp.contract.*;
+import se.arkalix.core.cp.security.HashBase64;
 import se.arkalix.dto.DtoReadableAs;
 import se.arkalix.dto.DtoWritableAs;
 import se.arkalix.util.InternalException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static se.arkalix.dto.DtoEncoding.JSON;
@@ -12,6 +14,8 @@ import static se.arkalix.dto.DtoEncoding.JSON;
 @DtoReadableAs(JSON)
 @DtoWritableAs(JSON)
 public interface DefinitionMessage {
+    List<HashBase64> hashes();
+
     Optional<SignedContractAcceptance> acceptance();
 
     Optional<SignedContractOffer> offer();
