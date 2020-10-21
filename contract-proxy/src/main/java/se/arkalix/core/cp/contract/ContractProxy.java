@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static se.arkalix.core.plugin.cp.ContractNegotiationStatus.*;
+import static se.arkalix.util.concurrent.Future.done;
 
 public class ContractProxy {
     private static final Logger logger = LoggerFactory.getLogger(ContractProxy.class);
@@ -112,15 +113,21 @@ public class ContractProxy {
     }
 
     private Future<?> resolveUnknownDefinitionsReferencedIn(final SignedContractOfferDto offer) {
-        return relay.getFromCounterParty(offer.hashReferencesInArguments()
+        final var hashes = offer.hashReferencesInArguments()
             .filter(hash -> !bank.contains(hash))
-            .collect(Collectors.toUnmodifiableList()))
+            .collect(Collectors.toUnmodifiableList());
+
+        if (hashes.isEmpty()) {
+            return done();
+        }
+
+        return relay.getFromCounterParty(hashes)
             .flatMap(definitions -> Futures.serialize(definitions.stream()
                 .map(definition -> {
                     bank.add(definition);
                     return (definition instanceof SignedContractOfferDto)
                         ? resolveUnknownDefinitionsReferencedIn((SignedContractOfferDto) definition)
-                        : Future.done();
+                        : done();
                 })));
     }
 
