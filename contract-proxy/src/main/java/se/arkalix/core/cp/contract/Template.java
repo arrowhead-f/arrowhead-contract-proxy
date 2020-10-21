@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Template {
-    private static final Pattern PATTERN = Pattern.compile("\\{([\\w_-]+)}");
+    private static final Pattern PATTERN = Pattern.compile("\\{([\\w_.-]+(?::[\\w_.-]+)?)}");
 
     private final String name;
     private final String text;
@@ -136,10 +136,6 @@ public class Template {
             builder.append("]; contract not valid");
             throw new ContractInvalidException(builder.toString());
         }
-    }
-
-    public void validate(final Contract contract) {
-        validate(contract.arguments());
     }
 
     @Override

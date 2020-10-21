@@ -4,6 +4,7 @@ import se.arkalix.dto.DtoReadableAs;
 import se.arkalix.dto.DtoToString;
 import se.arkalix.dto.DtoWritableAs;
 
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.time.Instant;
 import java.util.Base64;
@@ -45,7 +46,11 @@ public interface SignatureBase64 {
     }
 
     default boolean verify(final Certificate certificate, final byte[] data) {
-        return toSignature().verify(certificate.getPublicKey(), data);
+        return verify(certificate.getPublicKey(), data);
+    }
+
+    default boolean verify(final PublicKey publicKey, final byte[] data) {
+        return toSignature().verify(publicKey, data);
     }
 
     default void writeCanonicalJson(final StringBuilder builder, final boolean includeSum) {

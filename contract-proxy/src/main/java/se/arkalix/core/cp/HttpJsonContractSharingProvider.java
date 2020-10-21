@@ -27,6 +27,10 @@ import static se.arkalix.security.access.AccessPolicy.token;
 import static se.arkalix.security.access.AccessPolicy.unrestricted;
 import static se.arkalix.util.concurrent.Future.done;
 
+/**
+ * TODO: Decide on the future of this service.
+ */
+@Deprecated
 public class HttpJsonContractSharingProvider {
     private HttpJsonContractSharingProvider() {}
 

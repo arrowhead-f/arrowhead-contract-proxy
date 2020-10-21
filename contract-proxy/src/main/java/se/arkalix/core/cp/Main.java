@@ -67,19 +67,11 @@ public class Main {
                 .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 
-            system.provide(HttpJsonContractSharingProvider.createFor(system, proxy))
-                .ifSuccess(logIsProvidingService())
-                .onFailure(Main::panic);
-
             system.provide(HttpJsonTrustedContractNegotiationProvider.createFor(system, proxy))
                 .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 
             system.provide(HttpJsonTrustedContractObservationProvider.createFor(system, proxy))
-                .ifSuccess(logIsProvidingService())
-                .onFailure(Main::panic);
-
-            system.provide(HttpJsonTrustedContractSharingProvider.createFor(system, proxy))
                 .ifSuccess(logIsProvidingService())
                 .onFailure(Main::panic);
 

@@ -18,6 +18,10 @@ import static se.arkalix.net.http.HttpStatus.OK;
 import static se.arkalix.security.access.AccessPolicy.*;
 import static se.arkalix.util.concurrent.Future.done;
 
+/**
+ * TODO: Decide on the future of this service.
+ */
+@Deprecated
 public final class HttpJsonTrustedContractSharingProvider {
     private HttpJsonTrustedContractSharingProvider() {}
 

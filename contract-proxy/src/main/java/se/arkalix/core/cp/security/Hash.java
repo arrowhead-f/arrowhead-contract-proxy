@@ -41,4 +41,21 @@ public class Hash {
     public String toString() {
         return algorithm.toString() + ":" + Base64.getEncoder().encodeToString(sum);
     }
+
+    public static Hash valueOf(final String string) {
+        final var parts = string.split(":", 2);
+        if (parts.length != 2) {
+            throw new IllegalStateException("Expected colon (:) in " + string + "; none found");
+        }
+        try {
+            final var algorithm = HashAlgorithm.valueOf(parts[0]);
+            final var sum = Base64.getDecoder().decode(parts[1]);
+            return new Hash(algorithm, sum);
+        }
+        catch (final Throwable throwable) {
+            throw new IllegalStateException("Expected " +
+                "\"<hash-algorithm>:<base64-checksum>\"; got \"" +
+                string + "\"", throwable);
+        }
+    }
 }

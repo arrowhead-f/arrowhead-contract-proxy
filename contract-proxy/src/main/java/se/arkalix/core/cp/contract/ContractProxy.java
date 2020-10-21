@@ -2,6 +2,7 @@ package se.arkalix.core.cp.contract;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.arkalix.core.cp.bank.DefinitionBank;
 import se.arkalix.core.cp.security.HashAlgorithm;
 import se.arkalix.core.cp.security.HashAlgorithmUnsupportedException;
 import se.arkalix.core.cp.security.HashBase64;
@@ -11,8 +12,10 @@ import se.arkalix.core.plugin.cp.TrustedContractCounterOffer;
 import se.arkalix.core.plugin.cp.TrustedContractOffer;
 import se.arkalix.core.plugin.cp.TrustedContractRejectionDto;
 import se.arkalix.util.concurrent.Future;
+import se.arkalix.util.concurrent.Futures;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static se.arkalix.core.plugin.cp.ContractNegotiationStatus.*;
 
@@ -23,6 +26,7 @@ public class ContractProxy {
     private final Parties parties;
     private final ContractRelay relay;
     private final Templates templates;
+    private final DefinitionBank bank;
 
     private final ContractNegotiations negotiations;
 
@@ -32,6 +36,8 @@ public class ContractProxy {
         if (acceptedHashAlgorithms.isEmpty()) {
             throw new IllegalArgumentException("Expected acceptedHashAlgorithms.size() > 0");
         }
+
+        bank = new DefinitionBank(acceptedHashAlgorithms);
 
         Objects.requireNonNull(builder.ownedParties, "Expected ownedParties");
         if (builder.ownedParties.isEmpty()) {
@@ -57,8 +63,16 @@ public class ContractProxy {
         negotiations = new ContractNegotiations(templates, acceptedHashAlgorithms);
     }
 
-    public Optional<ContractNegotiation> getNegotiationByNamesAndId(final String name1, final String name2, final long id) {
+    public Optional<ContractNegotiation> getNegotiationByNamesAndId(
+        final String name1,
+        final String name2,
+        final long id
+    ) {
         return negotiations.getBy(name1, name2, id);
+    }
+
+    public DefinitionBank bank() {
+        return bank;
     }
 
     public Parties parties() {
@@ -76,6 +90,7 @@ public class ContractProxy {
         final var offeror = getOwnedPartyByFingerprintOrThrow(acceptance.offerorFingerprint());
         final var negotiation = getNegotiationOrThrow(offeror, acceptor, acceptance.negotiationId());
         negotiation.updateOnBehalfOfCounterParty(acceptance);
+        bank.add(acceptance);
         relay.sendToEventHandler(acceptance.negotiationId(), negotiation.lastOfferAsTrusted(), ACCEPTED)
             .onFailure(fault -> logger.warn("Failed to send " + acceptance + " to event handler", fault));
     }
@@ -87,8 +102,26 @@ public class ContractProxy {
         final var receiver = getOwnedPartyByFingerprintOrThrow(offer.receiverFingerprint());
         final var negotiation = negotiations.getOrCreateBy(receiver, offeror, offer.negotiationId());
         negotiation.updateOnBehalfOfCounterParty(offer);
-        relay.sendToEventHandler(offer.negotiationId(), negotiation.lastOfferAsTrusted(), OFFERING)
-            .onFailure(fault -> logger.warn("Failed to send " + offer + " to event handler", fault));
+        bank.add(offer);
+
+        resolveUnknownDefinitionsReferencedIn(offer)
+            .ifSuccess(ignored ->
+                relay.sendToEventHandler(offer.negotiationId(), negotiation.lastOfferAsTrusted(), OFFERING)
+                    .onFailure(fault -> logger.warn("Failed to send " + offer + " to event handler", fault)))
+            .onFailure(fault -> logger.error("Failed to resolve definition referenced in " + offer, fault));
+    }
+
+    private Future<?> resolveUnknownDefinitionsReferencedIn(final SignedContractOfferDto offer) {
+        return relay.getFromCounterParty(offer.hashReferencesInArguments()
+            .filter(hash -> !bank.contains(hash))
+            .collect(Collectors.toUnmodifiableList()))
+            .flatMap(definitions -> Futures.serialize(definitions.stream()
+                .map(definition -> {
+                    bank.add(definition);
+                    return (definition instanceof SignedContractOfferDto)
+                        ? resolveUnknownDefinitionsReferencedIn((SignedContractOfferDto) definition)
+                        : Future.done();
+                })));
     }
 
     public void update(final SignedContractRejectionDto rejection) {
@@ -98,6 +131,7 @@ public class ContractProxy {
         final var offeror = getOwnedPartyByFingerprintOrThrow(rejection.offerorFingerprint());
         final var negotiation = getNegotiationOrThrow(offeror, rejector, rejection.negotiationId());
         negotiation.updateOnBehalfOfCounterParty(rejection);
+        bank.add(rejection);
         relay.sendToEventHandler(rejection.negotiationId(), negotiation.lastOfferAsTrusted(), REJECTED)
             .onFailure(fault -> logger.warn("Failed to send " + rejection + " to event handler", fault));
     }
@@ -109,6 +143,7 @@ public class ContractProxy {
         final var offeror = getCounterPartyByCommonNameOrThrow(acceptance.offerorName());
         final var negotiation = getNegotiationOrThrow(acceptor, offeror, acceptance.negotiationId());
         final var signedAcceptance = negotiation.prepareOnBehalfOfOwnedParty(acceptance);
+        bank.add(signedAcceptance);
         return relay.sendToCounterParty(signedAcceptance, offeror)
             .ifSuccess(ignored -> {
                 negotiation.updateOnBehalfOfOwnedParty(signedAcceptance);
@@ -133,6 +168,7 @@ public class ContractProxy {
         }
 
         final var signedOffer = negotiation.prepareOnBehalfOfOwnedParty(offer);
+        bank.add(signedOffer);
         return relay.sendToCounterParty(signedOffer, receiver)
             .ifSuccess(ignored -> {
                 negotiation.updateOnBehalfOfOwnedParty(signedOffer);
@@ -149,6 +185,7 @@ public class ContractProxy {
         final var offeror = getCounterPartyByCommonNameOrThrow(rejection.offerorName());
         final var negotiation = getNegotiationOrThrow(rejector, offeror, rejection.negotiationId());
         final var signedRejection = negotiation.prepareOnBehalfOfOwnedParty(rejection);
+        bank.add(signedRejection);
         return relay.sendToCounterParty(signedRejection, offeror)
             .ifSuccess(ignored -> {
                 negotiation.updateOnBehalfOfOwnedParty(signedRejection);
@@ -186,8 +223,8 @@ public class ContractProxy {
     private ContractNegotiation getNegotiationOrThrow(
         final OwnedParty ownedParty,
         final Party counterParty,
-        final long negotiationId)
-    {
+        final long negotiationId
+    ) {
         return negotiations.getBy(ownedParty, counterParty, negotiationId)
             .orElseThrow(() -> new UnsatisfiableRequestException("UNKNOWN_NEGOTIATION", "" +
                 "No negotiation with ID " + negotiationId + " exists for " +

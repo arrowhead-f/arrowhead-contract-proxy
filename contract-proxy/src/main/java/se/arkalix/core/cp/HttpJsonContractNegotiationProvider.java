@@ -2,18 +2,29 @@ package se.arkalix.core.cp;
 
 import se.arkalix.ArService;
 import se.arkalix.ArSystem;
+import se.arkalix.core.cp.bank.DefinitionMessage;
 import se.arkalix.core.cp.contract.ContractProxy;
 import se.arkalix.core.cp.contract.SignedContractAcceptanceDto;
 import se.arkalix.core.cp.contract.SignedContractOfferDto;
 import se.arkalix.core.cp.contract.SignedContractRejectionDto;
+import se.arkalix.core.cp.security.Hash;
+import se.arkalix.core.cp.security.HashAlgorithm;
 import se.arkalix.core.cp.util.HttpServices;
+import se.arkalix.core.cp.util.UnsatisfiableRequestException;
 import se.arkalix.descriptor.EncodingDescriptor;
+import se.arkalix.net.http.service.HttpServiceRequestException;
+import se.arkalix.util.concurrent.Futures;
 
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static se.arkalix.net.http.HttpStatus.NO_CONTENT;
+import static se.arkalix.net.http.HttpStatus.*;
 import static se.arkalix.security.access.AccessPolicy.token;
 import static se.arkalix.security.access.AccessPolicy.unrestricted;
+import static se.arkalix.util.concurrent.Future.done;
 
 public class HttpJsonContractNegotiationProvider {
     private HttpJsonContractNegotiationProvider() {}
@@ -50,6 +61,34 @@ public class HttpJsonContractNegotiationProvider {
                     .ifSuccess(rejection -> {
                         proxy.update(rejection);
                         response.status(NO_CONTENT);
-                    }));
+                    }))
+
+            .get("/definitions", (request, response) -> {
+                final var hashParameters = request.queryParameters()
+                    .get("hash");
+
+                if (hashParameters == null || hashParameters.size() == 0) {
+                    throw new UnsatisfiableRequestException("NO_HASHES", "" +
+                        "At least one query parameter named \"hash\" must " +
+                        "be specified in the request, each of which must " +
+                        "have value consisting of a comma-separated list of " +
+                        "<hash-algorithm>:<base64-checksum> pairs");
+                }
+
+                final var definitions = hashParameters.stream()
+                    .flatMap(value -> Arrays.stream(value.split(","))
+                        .map(String::trim))
+                    .map(Hash::valueOf)
+                    .map(hash -> proxy.bank().get(hash))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .map(DefinitionMessage::from)
+                    .collect(Collectors.toUnmodifiableList());
+
+                response.status(OK)
+                    .body(definitions);
+
+                return done();
+            });
     }
 }

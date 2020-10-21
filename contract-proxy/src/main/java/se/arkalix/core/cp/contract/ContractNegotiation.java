@@ -137,7 +137,7 @@ public class ContractNegotiation {
             .negotiationId(acceptance.negotiationId())
             .acceptorFingerprint(preferredOwnedPartyFingerprintBase64)
             .offerorFingerprint(preferredCounterPartyFingerprintBase64)
-            .offerHash(HashBase64.from(preferredHashAlgorithm.hash(lastOffer().toCanonicalForm())))
+            .offerHash(HashBase64.from(lastOffer().hashUsing(preferredHashAlgorithm)))
             .signature(SignatureBase64.emptyFrom(acceptance.acceptedAt(), ownedParty.signatureScheme()))
             .build()
             .sign(ownedParty);
@@ -209,7 +209,7 @@ public class ContractNegotiation {
             .negotiationId(rejection.negotiationId())
             .rejectorFingerprint(preferredOwnedPartyFingerprintBase64)
             .offerorFingerprint(preferredCounterPartyFingerprintBase64)
-            .offerHash(HashBase64.from(preferredHashAlgorithm.hash(lastOffer().toCanonicalForm())))
+            .offerHash(HashBase64.from(lastOffer().hashUsing(preferredHashAlgorithm)))
             .signature(SignatureBase64.emptyFrom(rejection.rejectedAt(), ownedParty.signatureScheme()))
             .build()
             .sign(ownedParty);
@@ -331,14 +331,14 @@ public class ContractNegotiation {
 
     private void throwIfNotMatchingLastOffer(final HashBase64 hashBase64) {
         final var hash = hashBase64.toHash();
-        final var algorithm = hash.algorithm();
-        if (!acceptedHashAlgorithms.contains(algorithm)) {
+        final var hashAlgorithm = hash.algorithm();
+        if (!acceptedHashAlgorithms.contains(hashAlgorithm)) {
             throw new UnsatisfiableRequestException("UNSUPPORTED_HASH_ALGORITHM", "" +
-                "The offer hash in the provided message uses the " + algorithm +
+                "The offer hash in the provided message uses the " + hashAlgorithm +
                 " algorithm, but only " + acceptedHashAlgorithms +
                 " are supported for this negotiation session");
         }
-        final var lastOfferHash = algorithm.hash(lastOffer().toCanonicalForm());
+        final var lastOfferHash = lastOffer().hashUsing(hashAlgorithm);
         if (!hash.equals(lastOfferHash)) {
             throw new UnsatisfiableRequestException("BAD_HASH", "The offer " +
                 "hash in the provided message does not match that of the last " +
@@ -349,7 +349,7 @@ public class ContractNegotiation {
     private void throwIfNotSignedByPartyAt(final SignedMessage message, final Party signer, final Instant now) {
         final var signature = message.signature();
         throwIfNotCloseTo(signature.timestamp(), now);
-        if (signature.verify(signer.certificate(), message.toCanonicalForm())) {
+        if (message.verify(signer.certificate())) {
             return;
         }
         throw new UnsatisfiableRequestException("BAD_SIGNATURE", "The " +
