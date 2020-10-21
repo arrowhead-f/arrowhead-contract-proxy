@@ -43,9 +43,16 @@ public class Hash {
     }
 
     public static Hash valueOf(final String string) {
+        if (string == null || string.isEmpty()) {
+            throw new IllegalStateException("Expected " +
+                "\"<hash-algorithm>:<base64-checksum\"; got " + (string == null
+                ? "null"
+                : "an empty string"));
+        }
         final var parts = string.split(":", 2);
         if (parts.length != 2) {
-            throw new IllegalStateException("Expected colon (:) in " + string + "; none found");
+            throw new IllegalStateException("Expected colon (:) in \"" +
+                string + "\"; none found");
         }
         try {
             final var algorithm = HashAlgorithm.valueOf(parts[0]);
