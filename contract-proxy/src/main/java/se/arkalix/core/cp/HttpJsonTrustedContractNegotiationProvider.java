@@ -104,7 +104,7 @@ public class HttpJsonTrustedContractNegotiationProvider {
                         .body(hashes.stream()
                             .map(hash -> Map.entry(hash, proxy.bank().get(hash)))
                             .filter(entry -> entry.getValue().isPresent())
-                            .map(entry -> DefinitionMessage.from(entry.getKey(), entry.getValue().get()))
+                            .map(entry -> DefinitionMessage.from(entry.getValue().get(), entry.getKey()))
                             .collect(Collectors.toUnmodifiableList()));
                 }
                 else {

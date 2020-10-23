@@ -24,42 +24,43 @@ public interface DefinitionMessage {
 
     Optional<SignedContractRejection> rejection();
 
-    static DefinitionMessageDto from(final HashBase64Dto hash, final SignedContractAcceptanceDto acceptance) {
+    static DefinitionMessageDto from(final SignedContractAcceptanceDto acceptance, final HashBase64Dto... hashes) {
         return new DefinitionMessageBuilder()
             .acceptance(acceptance)
-            .hashes(hash)
+            .hashes(hashes)
             .build();
     }
 
-    static DefinitionMessageDto from(final HashBase64Dto hash, final SignedContractOfferDto offer) {
+    static DefinitionMessageDto from(final SignedContractOfferDto offer, final HashBase64Dto... hashes) {
         return new DefinitionMessageBuilder()
             .offer(offer)
-            .hashes(hash)
+            .hashes(hashes)
             .build();
     }
 
-    static DefinitionMessageDto from(final HashBase64Dto hash, final SignedContractRejectionDto rejection) {
+    static DefinitionMessageDto from(final SignedContractRejectionDto rejection, final HashBase64Dto... hashes) {
         return new DefinitionMessageBuilder()
             .rejection(rejection)
-            .hashes(hash)
+            .hashes(hashes)
             .build();
     }
 
-    static DefinitionMessageDto from(final Definition definition) {
-        return from(null, definition);
-    }
+    static DefinitionMessageDto from(final Definition definition, final Hash... hashes) {
+        final var hashes0 = new HashBase64Dto[hashes.length];
+        for (int i = hashes.length; i-- > 0; ) {
+            hashes0[i] = HashBase64.from(hashes[i]);
+        }
 
-    static DefinitionMessageDto from(final Hash hash, final Definition definition) {
-        final var hash0 = hash != null ? HashBase64.from(hash) : null;
         if (definition instanceof SignedContractAcceptanceDto) {
-            return from(hash0, (SignedContractAcceptanceDto) definition);
+            return from((SignedContractAcceptanceDto) definition, hashes0);
         }
         if (definition instanceof SignedContractOfferDto) {
-            return from(hash0, (SignedContractOfferDto) definition);
+            return from((SignedContractOfferDto) definition, hashes0);
         }
         if (definition instanceof SignedContractRejectionDto) {
-            return from(hash0, (SignedContractRejectionDto) definition);
+            return from((SignedContractRejectionDto) definition, hashes0);
         }
+
         throw new InternalException("Cannot create DefinitionMessageDto from " + definition);
     }
 }
