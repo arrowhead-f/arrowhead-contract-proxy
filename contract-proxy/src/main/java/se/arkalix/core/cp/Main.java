@@ -12,6 +12,9 @@ import se.arkalix.core.cp.contract.Template;
 import se.arkalix.core.cp.security.HashAlgorithm;
 import se.arkalix.core.cp.util.Properties;
 import se.arkalix.core.plugin.HttpJsonCloudPlugin;
+import se.arkalix.core.plugin.or.OrchestrationOption;
+import se.arkalix.core.plugin.or.OrchestrationPattern;
+import se.arkalix.core.plugin.or.OrchestrationStrategy;
 import se.arkalix.security.identity.OwnedIdentity;
 import se.arkalix.security.identity.TrustStore;
 import se.arkalix.util.function.ThrowingConsumer;
@@ -255,7 +258,21 @@ public class Main {
             .serviceCache(properties.getDuration("kalix.service-cache.entry-lifetime")
                 .map(ArServiceDescriptionCache::withEntryLifetimeLimit)
                 .orElseGet(ArServiceDescriptionCache::withDefaultEntryLifetimeLimit))
-            .plugins(HttpJsonCloudPlugin.joinViaServiceRegistryAt(serviceRegistrySocketAddress))
+            .plugins(new HttpJsonCloudPlugin.Builder()
+                .orchestrationStrategy(new OrchestrationStrategy(
+                    new OrchestrationPattern()
+                        .isIncludingService(false)
+                        .option(OrchestrationOption.MATCHMAKING, false),
+                    new OrchestrationPattern()
+                        .isIncludingService(true)
+                        .option(OrchestrationOption.MATCHMAKING, false),
+                    new OrchestrationPattern()
+                        .isIncludingService(true)
+                        .option(OrchestrationOption.MATCHMAKING, false)
+                        .option(OrchestrationOption.OVERRIDE_STORE, true)
+                ))
+                .serviceRegistrySocketAddress(serviceRegistrySocketAddress)
+                .build())
             .build();
     }
 }
