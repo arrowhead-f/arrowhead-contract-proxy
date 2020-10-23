@@ -16,7 +16,7 @@ import se.arkalix.descriptor.EncodingDescriptor;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -102,9 +102,9 @@ public class HttpJsonTrustedContractNegotiationProvider {
                 else if (!hashes.isEmpty()) {
                     response.status(OK)
                         .body(hashes.stream()
-                            .map(hash -> proxy.bank().get(hash).orElse(null))
-                            .filter(Objects::nonNull)
-                            .map(DefinitionMessage::from)
+                            .map(hash -> Map.entry(hash, proxy.bank().get(hash)))
+                            .filter(entry -> entry.getValue().isPresent())
+                            .map(entry -> DefinitionMessage.from(entry.getKey(), entry.getValue().get()))
                             .collect(Collectors.toUnmodifiableList()));
                 }
                 else {
